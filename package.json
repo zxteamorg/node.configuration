@@ -1,0 +1,45 @@
+{
+	"name": "@zxteam/configuration",
+	"version": "3.2.4",
+	"description": "Configuration implementation of the ZXTeam's Contact",
+	"author": {
+		"name": "Maxim Anurin",
+		"email": "maxim.anurin@zxteam.org",
+		"url": "http://www.anurin.name"
+	},
+	"contributors": [
+		{
+			"name": "Serhii Zghama",
+			"email": "serhii.zghama@zxteam.org"
+		}
+	],
+	"license": "MIT",
+	"dependencies": {
+		"@zxteam/contract": "^3.2.4",
+		"username": "^5.0.0"
+	},
+	"devDependencies": {
+		"@types/node": "^11.13.8",
+		"@types/tmp": "^0.1.0",
+		"@types/username": "^3.0.0",
+		"@zxnode/build": "^0.0.33",
+		"tmp": "^0.1.0"
+	},
+	"engines": {
+		"node": ">=11"
+	},
+	"keywords": [],
+	"repository": {
+		"type": "git",
+		"url": "ssh://git@dev.zxteam.net:22282/pub/node/configuration.git"
+	},
+	"bugs": {
+		"url": "https://dev.zxteam.net/pub/node/configuration/issues"
+	},
+	"homepage": "https://dev.zxteam.net/pub/node/configuration",
+	"scripts": {
+		"build": "zxbuild clean dist",
+		"test": "nyc --exclude submodules --exclude test --reporter=lcov --reporter=text --reporter=text-summary mocha \"test/**/*.test.js\" --recursive --timeout 10000"
+	},
+	"private": true
+}
