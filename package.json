@@ -15,7 +15,9 @@
 	],
 	"license": "MIT",
 	"dependencies": {
+		"@types/lodash": "^4.14.123",
 		"@zxteam/contract": "^3.2.4",
+		"lodash": "^4.17.11",
 		"username": "^5.0.0"
 	},
 	"devDependencies": {

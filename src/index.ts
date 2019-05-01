@@ -1,11 +1,10 @@
 import * as zxteam from "@zxteam/contract";
-
+import * as _ from "lodash";
 import * as path from "path";
 import * as fs from "fs";
 import * as username from "username";
 
 import ConfigurationLike = zxteam.Configuration;
-// import { fileSync } from "../node_modules/@types/tmp";
 
 export function fileConfiguration(configFile: string): ConfigurationLike {
 	const dict: ConfigurationDictionary = {};
@@ -30,6 +29,10 @@ export function develVirtualFilesConfiguration(configDir: string, develSite: str
 
 	const dict: ConfigurationDictionary = {};
 	files.forEach((file) => {
+		if (!fs.existsSync(file)) {
+			console.warn("Skip a configuration file (not exists): " + file);
+			throw new Error("Skip a configuration file(not exists): " + file);
+		}
 		propertiesFileContentProcessor(file, (name: string, value: string) => {
 			if (name in process.env) {
 				dict[name] = process.env[name] as string;
@@ -42,22 +45,18 @@ export function develVirtualFilesConfiguration(configDir: string, develSite: str
 }
 
 function propertiesFileContentProcessor(file: string, cb: (name: string, value: string) => void): void {
-	if (!fs.existsSync(file)) {
-		console.warn("Skip a configuration file (not exists): " + file);
-	} else {
-		const fileContent = fs.readFileSync(file);
-		const lines = fileContent.toString().split(/(?:\r\n|\r|\n)/g);
-		lines.forEach((line) => {
-			if (line.startsWith("#")) { return; }
-			const indexOfEq = line.indexOf("=");
-			if (indexOfEq >= 0) {
-				const name: string = line.substr(0, indexOfEq).trim();
-				const value: string = line.substr(indexOfEq + 1).trim();
-				cb(name, value);
+	const fileContent = fs.readFileSync(file);
+	const lines = fileContent.toString().split(/(?:\r\n|\r|\n)/g);
+	lines.forEach((line) => {
+		if (line.startsWith("#")) { return; }
+		const indexOfEq = line.indexOf("=");
+		if (indexOfEq >= 0) {
+			const name: string = line.substr(0, indexOfEq).trim();
+			const value: string = line.substr(indexOfEq + 1).trim();
+			cb(name, value);
 
-			}
-		});
-	}
+		}
+	});
 }
 
 /*==========*/
@@ -93,7 +92,7 @@ class Configuration implements ConfigurationLike {
 			throw new Error("Bad type of key '" + key + "'. Cannot convert the value '"
 				+ value + "' to boolean type.");
 		}
-		if (defaultValue) { return defaultValue; }
+		if (_.isBoolean(defaultValue)) { return defaultValue; }
 		throw new Error("A value for key '" + key + "' was not found in current confugration.");
 	}
 
@@ -132,7 +131,7 @@ class Configuration implements ConfigurationLike {
 			throw new Error("Bad type of key '" + key + "'. Cannot convert the value '"
 				+ value + "' to enabled boolean value.");
 		}
-		if (defaultValue) { return defaultValue; }
+		if (_.isBoolean(defaultValue)) { return defaultValue; }
 		throw new Error("A value for key '" + key + "' was not found in current confugration.");
 	}
 
