@@ -1,6 +1,6 @@
 {
 	"name": "@zxteam/configuration",
-	"version": "3.2.4",
+	"version": "4.0.0",
 	"description": "Configuration implementation of the ZXTeam's Contact",
 	"author": {
 		"name": "Maxim Anurin",
@@ -15,8 +15,8 @@
 	],
 	"license": "MIT",
 	"dependencies": {
-		"@types/lodash": "^4.14.123",
-		"@zxteam/contract": "^3.2.4",
+		"@types/lodash": "^4.14.126",
+		"@zxteam/contract": "^4.0.0",
 		"lodash": "^4.17.11",
 		"username": "^5.0.0"
 	},
@@ -24,7 +24,7 @@
 		"@types/node": "^11.13.8",
 		"@types/tmp": "^0.1.0",
 		"@types/username": "^3.0.0",
-		"@zxnode/build": "^0.0.33",
+		"@zxnode/build": "^0.0.34",
 		"tmp": "^0.1.0"
 	},
 	"engines": {
