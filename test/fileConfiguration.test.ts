@@ -218,8 +218,14 @@ describe("Checks all methods default value", function () {
 	it("Should be return int", function () {
 		assert.equal(config.getInt("int", 12345), 12345);
 	});
+	it("Should be return ZERO int", function () {
+		assert.equal(config.getInt("int", 0), 0);
+	});
 	it("Should be return string", function () {
 		assert.equal(config.getString("string", "string-hello-world"), "string-hello-world");
+	});
+	it("Should be return empty string", function () {
+		assert.equal(config.getString("string", ""), "");
 	});
 	it("Should be return booleanTrue", function () {
 		assert(config.getBoolean("booleanTrue", true));
