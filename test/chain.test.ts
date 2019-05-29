@@ -4,7 +4,7 @@ import { assert } from "chai";
 
 import * as thislib from "../src";
 
-describe("chain tests", function () {
+describe("chainConfiguration tests", function () {
 	const fakeConfguraton0: zxteam.Configuration = {
 		getBoolean(key: string, defaultValue?: boolean): boolean { throw new Error(); },
 		getConfiguration(configurationNamespace: string): zxteam.Configuration { throw new Error(); },
@@ -38,7 +38,7 @@ describe("chain tests", function () {
 	};
 
 	it("Generic test", function () {
-		const chain = thislib.chain(fakeConfguraton2, fakeConfguraton1, fakeConfguraton0);
+		const chain = thislib.chainConfiguration(fakeConfguraton2, fakeConfguraton1, fakeConfguraton0);
 		assert.equal(chain.getString("ageString"), "2", "Shold take value from fakeConfguraton2");
 		assert.equal(chain.getInt("ageInt"), 1, "Shold take value from fakeConfguraton1");
 		assert.equal(chain.getFloat("ageFloat"), 0, "Shold take value from fakeConfguraton0");

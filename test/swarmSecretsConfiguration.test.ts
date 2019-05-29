@@ -1,0 +1,35 @@
+import { Configuration } from "@zxteam/contract";
+import { assert } from "chai";
+
+import * as path from "path";
+import * as fs from "fs";
+import * as tmp from "tmp";
+import * as username from "username";
+
+import * as thislib from "../src";
+
+describe("swarmSecretsConfiguration tests", function () {
+	let tempDirectoryObj: tmp.DirResult;
+	let configuration: Configuration;
+	before(async () => {
+		// runs before all tests in this block
+		tempDirectoryObj = tmp.dirSync();
+		fs.writeFileSync(
+			path.join(tempDirectoryObj.name, "config.db.host"),
+			"localhost"
+		);
+		fs.writeFileSync(
+			path.join(tempDirectoryObj.name, "config.db.port"),
+			"5432"
+		);
+		configuration = await thislib.swarmSecretsConfiguration(tempDirectoryObj.name);
+	});
+	after(() => {
+		tempDirectoryObj.removeCallback();
+	});
+
+	it("Generic test", function() {
+		assert.equal(configuration.getString("config.db.host"), "localhost");
+		assert.equal(configuration.getInt("config.db.port"), 5432);
+	});
+});

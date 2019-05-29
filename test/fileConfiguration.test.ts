@@ -40,7 +40,7 @@ describe("Development configuration test getString", function () {
 		);
 	});
 	after(() => {
-		//tempDirectoryObj.removeCallback();
+		tempDirectoryObj.removeCallback();
 	});
 
 	beforeEach(() => {

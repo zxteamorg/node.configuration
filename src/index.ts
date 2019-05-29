@@ -4,7 +4,13 @@ import * as path from "path";
 import * as fs from "fs";
 import * as username from "username";
 
-export function chain(...configurations: ReadonlyArray<zxteam.Configuration>): zxteam.Configuration {
+import { promisify } from "util";
+
+const readFile = promisify(fs.readFile);
+const readdir = promisify(fs.readdir);
+const stat = promisify(fs.stat);
+
+export function chainConfiguration(...configurations: ReadonlyArray<zxteam.Configuration>): zxteam.Configuration {
 	const items = configurations.slice();
 	function binder(method: keyof zxteam.Configuration): (key: string, defaultValue?: any) => any {
 		function bind(key: string, defaultValue?: any) {
@@ -17,10 +23,10 @@ export function chain(...configurations: ReadonlyArray<zxteam.Configuration>): z
 		}
 		return bind;
 	}
-	const chainConfiguration: zxteam.Configuration = {
+	const chainConfigurationInstance: zxteam.Configuration = {
 		getBoolean: binder("getBoolean"),
 		getConfiguration(configurationNamespace: string): zxteam.Configuration {
-			return chain(...items.map(item => item.getConfiguration(configurationNamespace)));
+			return chainConfiguration(...items.map(item => item.getConfiguration(configurationNamespace)));
 		},
 		getEnabled: binder("getEnabled"),
 		getFloat: binder("getFloat"),
@@ -34,7 +40,7 @@ export function chain(...configurations: ReadonlyArray<zxteam.Configuration>): z
 			return false;
 		}
 	};
-	return chainConfiguration;
+	return chainConfigurationInstance;
 }
 export function fileConfiguration(configFile: string): zxteam.Configuration {
 	const dict: ConfigurationDictionary = {};
@@ -50,6 +56,32 @@ export function envConfiguration(): zxteam.Configuration {
 			dict[name] = value;
 		}
 	});
+	return new Configuration(dict);
+}
+export function cmdConfiguration(): zxteam.Configuration {
+	//TODO
+	throw new Error("Not implemented yet");
+}
+export async function swarmSecretsConfiguration(directory?: string): Promise<zxteam.Configuration> {
+	if (directory === undefined) {
+		// Setup default dir
+		// https://docs.docker.com/engine/swarm/secrets/
+		directory = "/run/secrets";
+	}
+
+	const dict: ConfigurationDictionary = {};
+	const sourceDirectory = directory;
+	const files: Array<string> = await readdir(sourceDirectory);
+	await files.reduce(async (p, c) => {
+		await p;
+		const fullFileName = path.join(sourceDirectory, c);
+		const stats = await stat(fullFileName);
+		if (stats.isFile()) {
+			const value = await readFile(fullFileName, "utf-8");
+			dict[c] = value.trim();
+		}
+	}, Promise.resolve());
+
 	return new Configuration(dict);
 }
 export function develVirtualFilesConfiguration(configDir: string, develSite: string): zxteam.Configuration {
