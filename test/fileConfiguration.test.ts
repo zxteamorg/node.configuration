@@ -135,6 +135,7 @@ describe("Checks all methods with type", function () {
 			"intZero = 0\r\n" +
 			"intBig = 123456789123456789123456789\r\n" +
 			"string = string-hello-world\r\n" +
+			"emptyString = \r\n" +
 			"booleanTrue = true\r\n" +
 			"booleanFalse = false\r\n" +
 			"float = 0.123\r\n" +
@@ -169,6 +170,9 @@ describe("Checks all methods with type", function () {
 	});
 	it("Should be return string", function () {
 		assert.equal(config.getString("string"), "string-hello-world");
+	});
+	it("Should be return empty string", function () {
+		assert.equal(config.getString("emptyString"), "");
 	});
 	it("Should be return booleanTrue", function () {
 		assert(config.getBoolean("booleanTrue"));
