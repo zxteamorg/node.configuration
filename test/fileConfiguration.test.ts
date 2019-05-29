@@ -236,6 +236,9 @@ describe("Checks all methods default value", function () {
 	it("Should be return float", function () {
 		assert.equal(config.getFloat("float", 0.123), 0.123);
 	});
+	it("Should be return ZERO float", function () {
+		assert.equal(config.getFloat("float", 0), 0);
+	});
 });
 
 describe("Negative test", function () {

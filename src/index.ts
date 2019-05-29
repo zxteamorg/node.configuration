@@ -4,16 +4,55 @@ import * as path from "path";
 import * as fs from "fs";
 import * as username from "username";
 
-import ConfigurationLike = zxteam.Configuration;
-
-export function fileConfiguration(configFile: string): ConfigurationLike {
+export function chain(...configurations: ReadonlyArray<zxteam.Configuration>): zxteam.Configuration {
+	const items = configurations.slice();
+	function binder(method: keyof zxteam.Configuration): (key: string, defaultValue?: any) => any {
+		function bind(key: string, defaultValue?: any) {
+			for (let itemIndex = 0; itemIndex < items.length; ++itemIndex) {
+				const configurationItem: zxteam.Configuration = items[itemIndex];
+				if (configurationItem.hasKey(key)) { return configurationItem[method](key); }
+			}
+			if (defaultValue !== undefined) { return defaultValue; }
+			throw new Error("A value for key '" + key + "' was not found in current confugration.");
+		}
+		return bind;
+	}
+	const chainConfiguration: zxteam.Configuration = {
+		getBoolean: binder("getBoolean"),
+		getConfiguration(configurationNamespace: string): zxteam.Configuration {
+			return chain(...items.map(item => item.getConfiguration(configurationNamespace)));
+		},
+		getEnabled: binder("getEnabled"),
+		getFloat: binder("getFloat"),
+		getInt: binder("getInt"),
+		getObject: binder("getObject"),
+		getString: binder("getString"),
+		hasKey(key: string): boolean {
+			for (let itemIndex = 0; itemIndex < items.length; ++itemIndex) {
+				if (items[itemIndex].hasKey(key)) { return true; }
+			}
+			return false;
+		}
+	};
+	return chainConfiguration;
+}
+export function fileConfiguration(configFile: string): zxteam.Configuration {
 	const dict: ConfigurationDictionary = {};
 	propertiesFileContentProcessor(configFile, (name: string, value: string) => {
 		dict[name] = value;
 	});
 	return new Configuration(dict);
 }
-export function develVirtualFilesConfiguration(configDir: string, develSite: string): ConfigurationLike {
+export function envConfiguration(): zxteam.Configuration {
+	const dict: ConfigurationDictionary = {};
+	_.entries(process.env).forEach(([name, value]) => {
+		if (value !== undefined) {
+			dict[name] = value;
+		}
+	});
+	return new Configuration(dict);
+}
+export function develVirtualFilesConfiguration(configDir: string, develSite: string): zxteam.Configuration {
 	if (!configDir) { throw new ArgumentException("configDir"); }
 	if (!fs.existsSync(configDir)) { throw new Error("Bad configuration directory (not exists): " + configDir); }
 	const projectConfigDir = path.join(configDir, "project.properties");
@@ -64,12 +103,12 @@ function propertiesFileContentProcessor(file: string, cb: (name: string, value: 
 /*==========*/
 type ConfigurationDictionary = { [key: string]: string };
 
-class Configuration implements ConfigurationLike {
+class Configuration implements zxteam.Configuration {
 	private readonly _dict: ConfigurationDictionary;
 
 	public constructor(dict: ConfigurationDictionary) { this._dict = dict; }
 
-	public getConfiguration(configurationNamespace: string): ConfigurationLike {
+	public getConfiguration(configurationNamespace: string): zxteam.Configuration {
 		if (!configurationNamespace) { throw new ArgumentException("configurationNamespace"); }
 		const subDict: ConfigurationDictionary = {};
 		const criteria = configurationNamespace + ".";
@@ -92,7 +131,7 @@ class Configuration implements ConfigurationLike {
 			throw new Error("Bad type of key '" + key + "'. Cannot convert the value '"
 				+ value + "' to boolean type.");
 		}
-		if (_.isBoolean(defaultValue)) { return defaultValue; }
+		if (defaultValue !== undefined) { return defaultValue; }
 		throw new Error("A value for key '" + key + "' was not found in current confugration.");
 	}
 
@@ -105,7 +144,7 @@ class Configuration implements ConfigurationLike {
 			throw new Error("Bad type of key '" + key + "'. Cannot convert the value '"
 				+ value + "' to integer type.");
 		}
-		if (defaultValue) { return defaultValue; }
+		if (defaultValue !== undefined) { return defaultValue; }
 		throw new Error("A value for key '" + key + "' was not found in current confugration.");
 	}
 
@@ -118,7 +157,7 @@ class Configuration implements ConfigurationLike {
 			throw new Error("Bad type of key '" + key + "'. Cannot convert the value '"
 				+ value + "' to float type.");
 		}
-		if (defaultValue) { return defaultValue; }
+		if (defaultValue !== undefined) { return defaultValue; }
 		throw new Error("A value for key '" + key + "' was not found in current confugration.");
 	}
 
@@ -131,7 +170,7 @@ class Configuration implements ConfigurationLike {
 			throw new Error("Bad type of key '" + key + "'. Cannot convert the value '"
 				+ value + "' to enabled boolean value.");
 		}
-		if (_.isBoolean(defaultValue)) { return defaultValue; }
+		if (defaultValue !== undefined) { return defaultValue; }
 		throw new Error("A value for key '" + key + "' was not found in current confugration.");
 	}
 
@@ -142,8 +181,13 @@ class Configuration implements ConfigurationLike {
 	public getString(key: string, defaultValue?: string): string {
 		if (!key) { throw new ArgumentException("key"); }
 		if (key in this._dict) { return this._dict[key]; }
-		if (defaultValue) { return defaultValue; }
+		if (defaultValue !== undefined) { return defaultValue; }
 		throw new Error("A value for key '" + key + "' was not found in current confugration.");
+	}
+
+	public hasKey(key: string): boolean {
+		if (!key) { throw new ArgumentException("key"); }
+		return key in this._dict;
 	}
 }
 
