@@ -1,6 +1,6 @@
 {
 	"name": "@zxteam/configuration",
-	"version": "4.0.2",
+	"version": "5.0.1",
 	"description": "Configuration implementation of the ZXTeam's Contact",
 	"author": {
 		"name": "ZXTeam",
@@ -20,13 +20,13 @@
 	],
 	"license": "MIT",
 	"dependencies": {
-		"@zxteam/contract": "^4.0.1",
+		"@zxteam/contract": "^5.0.1",
 		"lodash": "^4.17.11",
 		"username": "^5.0.0"
 	},
 	"devDependencies": {
 		"@types/lodash": "^4.14.132",
-		"@types/node": "^11.13.8",
+		"@types/node": "^11.13.14",
 		"@types/tmp": "^0.1.0",
 		"@types/username": "^3.0.0",
 		"@zxnode/build": "^0.0.34",
