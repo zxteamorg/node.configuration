@@ -30,6 +30,6 @@ describe("swarmSecretsConfiguration tests", function () {
 
 	it("Generic test", function() {
 		assert.equal(configuration.getString("config.db.host"), "localhost");
-		assert.equal(configuration.getInt("config.db.port"), 5432);
+		assert.equal(configuration.getInteger("config.db.port"), 5432);
 	});
 });

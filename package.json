@@ -1,6 +1,6 @@
 {
 	"name": "@zxteam/configuration",
-	"version": "5.0.1",
+	"version": "5.0.9",
 	"description": "Configuration implementation of the ZXTeam's Contact",
 	"author": {
 		"name": "ZXTeam",
@@ -20,13 +20,13 @@
 	],
 	"license": "MIT",
 	"dependencies": {
-		"@zxteam/contract": "^5.0.1",
+		"@zxteam/contract": "^5.0.9",
 		"lodash": "^4.17.11",
 		"username": "^5.0.0"
 	},
 	"devDependencies": {
 		"@types/lodash": "^4.14.132",
-		"@types/node": "^11.13.14",
+		"@types/node": "^11.13.15",
 		"@types/tmp": "^0.1.0",
 		"@types/username": "^3.0.0",
 		"@zxnode/build": "^0.0.34",
@@ -46,7 +46,7 @@
 	"homepage": "https://dev.zxteam.net/pub/node/configuration",
 	"scripts": {
 		"build": "zxbuild clean dist",
-		"test": "nyc --exclude submodules --exclude test --reporter=lcov --reporter=text --reporter=text-summary mocha \"test/**/*.test.js\" --recursive --timeout 10000"
+		"test": "nyc --exclude submodules --exclude test --extension=\".ts\" --reporter=lcov --reporter=text --reporter=text-summary mocha \"test/**/*.test.js\" --recursive --timeout 10000"
 	},
 	"private": true
 }

@@ -19,26 +19,27 @@ export function chainConfiguration(...configurations: ReadonlyArray<zxteam.Confi
 				if (configurationItem.hasKey(key)) { return configurationItem[method](key); }
 			}
 			if (defaultValue !== undefined) { return defaultValue; }
-			throw new Error("A value for key '" + key + "' was not found in current confugration.");
+			throw new Error("A value for key '" + key + "' was not found in current configuration.");
 		}
 		return bind;
 	}
 	const chainConfigurationInstance: zxteam.Configuration = {
+		get: binder("get"),
 		getBoolean: binder("getBoolean"),
 		getConfiguration(configurationNamespace: string): zxteam.Configuration {
 			return chainConfiguration(...items.map(item => item.getConfiguration(configurationNamespace)));
 		},
 		getEnabled: binder("getEnabled"),
 		getFloat: binder("getFloat"),
-		getInt: binder("getInt"),
-		getObject: binder("getObject"),
+		getInteger: binder("getInteger"),
 		getString: binder("getString"),
 		hasKey(key: string): boolean {
 			for (let itemIndex = 0; itemIndex < items.length; ++itemIndex) {
 				if (items[itemIndex].hasKey(key)) { return true; }
 			}
 			return false;
-		}
+		},
+		keys() { return _.union(...items.map(item => Object.keys(item))); }
 	};
 	return chainConfigurationInstance;
 }
@@ -137,8 +138,14 @@ type ConfigurationDictionary = { [key: string]: string };
 
 class Configuration implements zxteam.Configuration {
 	private readonly _dict: ConfigurationDictionary;
+	private readonly _parentNamespace?: string;
 
-	public constructor(dict: ConfigurationDictionary) { this._dict = dict; }
+	public constructor(dict: ConfigurationDictionary, parentNamespace?: string) {
+		this._dict = dict;
+		if (parentNamespace !== undefined) {
+			this._parentNamespace = parentNamespace;
+		}
+	}
 
 	public getConfiguration(configurationNamespace: string): zxteam.Configuration {
 		if (!configurationNamespace) { throw new ArgumentException("configurationNamespace"); }
@@ -151,7 +158,16 @@ class Configuration implements zxteam.Configuration {
 				subDict[key.substring(criteriaLen)] = value;
 			}
 		});
-		return new Configuration(subDict);
+		return new Configuration(subDict, configurationNamespace);
+	}
+
+	public get(key: string): boolean | number | string {
+		if (!key) { throw new ArgumentException("key"); }
+		if (key in this._dict) {
+			const value = this._dict[key];
+			return value;
+		}
+		throw new Error(this.generateWrongKeyErrorMessage(key));
 	}
 
 	public getBoolean(key: string, defaultValue?: boolean): boolean {
@@ -164,10 +180,10 @@ class Configuration implements zxteam.Configuration {
 				+ value + "' to boolean type.");
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
-		throw new Error("A value for key '" + key + "' was not found in current confugration.");
+		throw new Error(this.generateWrongKeyErrorMessage(key));
 	}
 
-	public getInt(key: string, defaultValue?: number): number {
+	public getInteger(key: string, defaultValue?: number): number {
 		if (!key) { throw new ArgumentException("key"); }
 		if (key in this._dict) {
 			const value = this._dict[key];
@@ -177,7 +193,7 @@ class Configuration implements zxteam.Configuration {
 				+ value + "' to integer type.");
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
-		throw new Error("A value for key '" + key + "' was not found in current confugration.");
+		throw new Error(this.generateWrongKeyErrorMessage(key));
 	}
 
 	public getFloat(key: string, defaultValue?: number): number {
@@ -190,7 +206,7 @@ class Configuration implements zxteam.Configuration {
 				+ value + "' to float type.");
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
-		throw new Error("A value for key '" + key + "' was not found in current confugration.");
+		throw new Error(this.generateWrongKeyErrorMessage(key));
 	}
 
 	public getEnabled(key: string, defaultValue?: boolean): boolean {
@@ -203,23 +219,30 @@ class Configuration implements zxteam.Configuration {
 				+ value + "' to enabled boolean value.");
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
-		throw new Error("A value for key '" + key + "' was not found in current confugration.");
-	}
-
-	public getObject(key: string, defaultValue?: any): any {
-		throw new Error("Not implemented yet.");
+		throw new Error(this.generateWrongKeyErrorMessage(key));
 	}
 
 	public getString(key: string, defaultValue?: string): string {
 		if (!key) { throw new ArgumentException("key"); }
 		if (key in this._dict) { return this._dict[key]; }
 		if (defaultValue !== undefined) { return defaultValue; }
-		throw new Error("A value for key '" + key + "' was not found in current confugration.");
+		throw new Error(this.generateWrongKeyErrorMessage(key));
 	}
 
 	public hasKey(key: string): boolean {
 		if (!key) { throw new ArgumentException("key"); }
 		return key in this._dict;
+	}
+
+	public keys(): ReadonlyArray<string> {
+		return Object.keys(this._dict);
+	}
+
+	private generateWrongKeyErrorMessage(key: string): string {
+		if (this._parentNamespace !== undefined) {
+			return `A value for key '${this._parentNamespace}.${key}' was not found in current configuration.`;
+		}
+		return `A value for key '${key}' was not found in current configuration.`;
 	}
 }
 

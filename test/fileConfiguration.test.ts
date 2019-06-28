@@ -157,16 +157,16 @@ describe("Checks all methods with type", function () {
 		assert.equal(config.getEnabled("disabledType"), false);
 	});
 	it("Should be return int", function () {
-		assert.equal(config.getInt("int"), 12345);
+		assert.equal(config.getInteger("int"), 12345);
 	});
 	it("Should be return intMinus", function () {
-		assert.equal(config.getInt("intMinus"), -12345);
+		assert.equal(config.getInteger("intMinus"), -12345);
 	});
 	it("Should be return intZero", function () {
-		assert.equal(config.getInt("intZero"), 0);
+		assert.equal(config.getInteger("intZero"), 0);
 	});
 	it.skip("Should be return intBig", function () {
-		assert.equal(config.getInt("intBig"), 123456789123456789123456789);
+		assert.equal(config.getInteger("intBig"), 123456789123456789123456789);
 	});
 	it("Should be return string", function () {
 		assert.equal(config.getString("string"), "string-hello-world");
@@ -216,10 +216,10 @@ describe("Checks all methods default value", function () {
 		assert.equal(config.getEnabled("int", false), false);
 	});
 	it("Should be return int", function () {
-		assert.equal(config.getInt("int", 12345), 12345);
+		assert.equal(config.getInteger("int", 12345), 12345);
 	});
 	it("Should be return ZERO int", function () {
-		assert.equal(config.getInt("int", 0), 0);
+		assert.equal(config.getInteger("int", 0), 0);
 	});
 	it("Should be return string", function () {
 		assert.equal(config.getString("string", "string-hello-world"), "string-hello-world");
@@ -304,10 +304,10 @@ describe("Negative test", function () {
 		}
 		assert.fail("Should never happened");
 	});
-	it("Should be execution error Wrong argument on getInt", function () {
+	it("Should be execution error Wrong argument on getInteger", function () {
 		try {
 			let empty: any;
-			config.getInt(empty);
+			config.getInteger(empty);
 		} catch (err) {
 			assert.equal((<any>err).name, "ArgumentError");
 			return;
@@ -320,16 +320,6 @@ describe("Negative test", function () {
 			config.getString(empty);
 		} catch (err) {
 			assert.equal((<any>err).name, "ArgumentError");
-			return;
-		}
-		assert.fail("Should never happened");
-	});
-	it("Should be execution error Not implemented yet.", function () {
-		try {
-			let empty: any;
-			config.getObject(empty);
-		} catch (err) {
-			assert.equal((<any>err).message, "Not implemented yet.");
 			return;
 		}
 		assert.fail("Should never happened");
@@ -374,10 +364,10 @@ describe("Negative test", function () {
 		}
 		assert.fail("Should never happened");
 	});
-	it("Should be execution error not found key on getInt", function () {
+	it("Should be execution error not found key on getInteger", function () {
 		try {
 			const fake = "fake";
-			config.getInt(fake);
+			config.getInteger(fake);
 		} catch (err) {
 			assert((<any>err).message.startsWith("A value for key "));
 			return;
@@ -393,9 +383,9 @@ describe("Negative test", function () {
 		}
 		assert.fail("Should never happened");
 	});
-	it("Should be execution error Bad type of key on getInt", function () {
+	it("Should be execution error Bad type of key on getInteger", function () {
 		try {
-			config.getInt("int");
+			config.getInteger("int");
 		} catch (err) {
 			assert((<any>err).message.startsWith("Bad type of key "));
 			return;
