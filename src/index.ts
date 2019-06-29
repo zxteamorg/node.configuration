@@ -44,14 +44,14 @@ export function chainConfiguration(...configurations: ReadonlyArray<zxteam.Confi
 	return chainConfigurationInstance;
 }
 export function fileConfiguration(configFile: string): zxteam.Configuration {
-	const dict: ConfigurationDictionary = {};
+	const dict: Configuration.Dictionary = {};
 	propertiesFileContentProcessor(configFile, (name: string, value: string) => {
 		dict[name] = value;
 	});
 	return new Configuration(dict);
 }
 export function envConfiguration(): zxteam.Configuration {
-	const dict: ConfigurationDictionary = {};
+	const dict: Configuration.Dictionary = {};
 	_.entries(process.env).forEach(([name, value]) => {
 		if (value !== undefined) {
 			dict[name] = value;
@@ -70,7 +70,7 @@ export async function swarmSecretsConfiguration(directory?: string): Promise<zxt
 		directory = "/run/secrets";
 	}
 
-	const dict: ConfigurationDictionary = {};
+	const dict: Configuration.Dictionary = {};
 	const sourceDirectory = directory;
 	const files: Array<string> = await readdir(sourceDirectory);
 	await files.reduce(async (p, c) => {
@@ -99,7 +99,7 @@ export function develVirtualFilesConfiguration(configDir: string, develSite: str
 		files.push(path.join(userConfigDir, "config-" + currentUserName + ".properties"));
 	}
 
-	const dict: ConfigurationDictionary = {};
+	const dict: Configuration.Dictionary = {};
 	files.forEach((file) => {
 		if (!fs.existsSync(file)) {
 			console.warn("Skip a configuration file (not exists): " + file);
@@ -116,31 +116,15 @@ export function develVirtualFilesConfiguration(configDir: string, develSite: str
 	return new Configuration(dict);
 }
 
-function propertiesFileContentProcessor(file: string, cb: (name: string, value: string) => void): void {
-	const fileContent = fs.readFileSync(file);
-	const lines = fileContent.toString().split(/(?:\r\n|\r|\n)/g);
-	lines.forEach((line) => {
-		if (line.startsWith("#")) { return; }
-		const indexOfEq = line.indexOf("=");
-		if (indexOfEq >= 0) {
-			const name: string = line.substr(0, indexOfEq).trim();
-			const value: string = line.substr(indexOfEq + 1).trim();
-			cb(name, value);
-
-		}
-	});
+export namespace Configuration {
+	export type Dictionary = { [key: string]: string };
 }
 
-/*==========*/
-/* INTERNAL */
-/*==========*/
-type ConfigurationDictionary = { [key: string]: string };
-
-class Configuration implements zxteam.Configuration {
-	private readonly _dict: ConfigurationDictionary;
+export class Configuration implements zxteam.Configuration {
+	private readonly _dict: Configuration.Dictionary;
 	private readonly _parentNamespace?: string;
 
-	public constructor(dict: ConfigurationDictionary, parentNamespace?: string) {
+	public constructor(dict: Configuration.Dictionary, parentNamespace?: string) {
 		this._dict = dict;
 		if (parentNamespace !== undefined) {
 			this._parentNamespace = parentNamespace;
@@ -149,7 +133,7 @@ class Configuration implements zxteam.Configuration {
 
 	public getConfiguration(configurationNamespace: string): zxteam.Configuration {
 		if (!configurationNamespace) { throw new ArgumentException("configurationNamespace"); }
-		const subDict: ConfigurationDictionary = {};
+		const subDict: Configuration.Dictionary = {};
 		const criteria = configurationNamespace + ".";
 		const criteriaLen = criteria.length;
 		Object.keys(this._dict).forEach((key) => {
@@ -246,6 +230,23 @@ class Configuration implements zxteam.Configuration {
 	}
 }
 
+/*==========*/
+/* INTERNAL */
+/*==========*/
+function propertiesFileContentProcessor(file: string, cb: (name: string, value: string) => void): void {
+	const fileContent = fs.readFileSync(file);
+	const lines = fileContent.toString().split(/(?:\r\n|\r|\n)/g);
+	lines.forEach((line) => {
+		if (line.startsWith("#")) { return; }
+		const indexOfEq = line.indexOf("=");
+		if (indexOfEq >= 0) {
+			const name: string = line.substr(0, indexOfEq).trim();
+			const value: string = line.substr(indexOfEq + 1).trim();
+			cb(name, value);
+
+		}
+	});
+}
 
 class ArgumentException extends Error implements zxteam.ArgumentError {
 	public readonly name = "ArgumentError";
