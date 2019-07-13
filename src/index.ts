@@ -248,7 +248,7 @@ function propertiesFileContentProcessor(file: string, cb: (name: string, value: 
 	});
 }
 
-class ArgumentException extends Error implements zxteam.ArgumentError {
+class ArgumentException extends Error {
 	public readonly name = "ArgumentError";
 }
 
