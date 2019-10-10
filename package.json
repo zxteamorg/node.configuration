@@ -1,6 +1,6 @@
 {
 	"name": "@zxteam/configuration",
-	"version": "6.0.21",
+	"version": "6.0.23",
 	"description": "Configuration implementation of the ZXTeam's Contact",
 	"author": {
 		"name": "ZXTeam",
@@ -20,13 +20,14 @@
 	],
 	"license": "MIT",
 	"dependencies": {
-		"@zxteam/contract": "^6.0.21",
-		"lodash": "^4.17.14",
-		"username": "^5.0.0"
+		"@zxteam/contract": "^6.0.23",
+		"@zxteam/errors": "^6.0.21",
+		"lodash": "^4.17.15",
+		"username": "^5.1.0"
 	},
 	"devDependencies": {
-		"@types/lodash": "^4.14.136",
-		"@types/node": "^11.13.21",
+		"@types/lodash": "^4.14.144",
+		"@types/node": "^11.13.22",
 		"@types/tmp": "^0.1.0",
 		"@types/username": "^3.0.0",
 		"@zxnode/build": "^0.0.34",
@@ -38,7 +39,7 @@
 	"keywords": [],
 	"repository": {
 		"type": "git",
-		"url": "ssh://git@dev.zxteam.net:22282/pub/node/configuration.git"
+		"url": "ssh://code@dev.zxteam.net:22282/pub/node/configuration.git"
 	},
 	"bugs": {
 		"url": "https://dev.zxteam.net/pub/node/configuration/issues"
@@ -46,7 +47,8 @@
 	"homepage": "https://dev.zxteam.net/pub/node/configuration",
 	"scripts": {
 		"build": "zxbuild clean dist",
-		"test": "nyc --exclude submodules --exclude test --extension=\".ts\" --reporter=lcov --reporter=text --reporter=text-summary mocha \"test/**/*.test.js\" --recursive --timeout 10000"
+		"test": "nyc --exclude submodules --exclude test --extension=\".ts\" --reporter=lcov --reporter=text --reporter=text-summary mocha \"test/**/*.test.js\" --recursive --timeout 10000",
+		"test:only": "mocha --require source-map-support/register \"test/**/*.test.js\" --recursive --timeout 10000"
 	},
 	"private": true
 }

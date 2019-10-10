@@ -1,12 +1,14 @@
 import { assert } from "chai";
 
+import { Configuration } from "@zxteam/contract";
+import { ArgumentError } from "@zxteam/errors";
+
 import * as path from "path";
 import * as fs from "fs";
 import * as tmp from "tmp";
 import * as username from "username";
 
 import * as thislib from "../src";
-import { Configuration } from "@zxteam/contract";
 
 describe("Development configuration test getString", function () {
 	let tempDirectoryObj: tmp.DirResult;
@@ -269,7 +271,7 @@ describe("Negative test", function () {
 			let empty: any;
 			config.getBoolean(empty);
 		} catch (err) {
-			assert.equal((<any>err).name, "ArgumentError");
+			assert.instanceOf(err, ArgumentError);
 			return;
 		}
 		assert.fail("Should never happened");
@@ -279,7 +281,7 @@ describe("Negative test", function () {
 			let empty: any;
 			config.getConfiguration(empty);
 		} catch (err) {
-			assert.equal((<any>err).name, "ArgumentError");
+			assert.instanceOf(err, ArgumentError);
 			return;
 		}
 		assert.fail("Should never happened");
@@ -289,7 +291,7 @@ describe("Negative test", function () {
 			let empty: any;
 			config.getEnabled(empty);
 		} catch (err) {
-			assert.equal((<any>err).name, "ArgumentError");
+			assert.instanceOf(err, ArgumentError);
 			return;
 		}
 		assert.fail("Should never happened");
@@ -299,7 +301,7 @@ describe("Negative test", function () {
 			let empty: any;
 			config.getFloat(empty);
 		} catch (err) {
-			assert.equal((<any>err).name, "ArgumentError");
+			assert.instanceOf(err, ArgumentError);
 			return;
 		}
 		assert.fail("Should never happened");
@@ -309,7 +311,7 @@ describe("Negative test", function () {
 			let empty: any;
 			config.getInteger(empty);
 		} catch (err) {
-			assert.equal((<any>err).name, "ArgumentError");
+			assert.instanceOf(err, ArgumentError);
 			return;
 		}
 		assert.fail("Should never happened");
@@ -319,7 +321,7 @@ describe("Negative test", function () {
 			let empty: any;
 			config.getString(empty);
 		} catch (err) {
-			assert.equal((<any>err).name, "ArgumentError");
+			assert.instanceOf(err, ArgumentError);
 			return;
 		}
 		assert.fail("Should never happened");
@@ -415,7 +417,7 @@ describe("Negative test", function () {
 			let emptyDir: any;
 			thislib.develVirtualFilesConfiguration(emptyDir, emptyDir);
 		} catch (err) {
-			assert.equal((<any>err).name, "ArgumentError");
+			assert.instanceOf(err, ArgumentError);
 			return;
 		}
 		assert.fail("Should never happened");

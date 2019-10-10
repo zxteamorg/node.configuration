@@ -1,41 +1,54 @@
-import * as zxteam from "@zxteam/contract";
+import { Configuration as ConfigurationContract } from "@zxteam/contract";
+import { ArgumentError } from "@zxteam/errors";
+
 import * as _ from "lodash";
 import * as path from "path";
 import * as fs from "fs";
 import * as username from "username";
-
 import { promisify } from "util";
 
 const readFile = promisify(fs.readFile);
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 
-export function chainConfiguration(...configurations: ReadonlyArray<zxteam.Configuration>): zxteam.Configuration {
+export function chainConfiguration(...configurations: ReadonlyArray<ConfigurationContract>): ConfigurationContract {
 	const items = configurations.slice();
-	function binder(method: keyof zxteam.Configuration): (key: string, defaultValue?: any) => any {
+	function binder(method: keyof ConfigurationContract): (key: string, defaultValue?: any) => any {
 		function bind(key: string, defaultValue?: any) {
 			for (let itemIndex = 0; itemIndex < items.length; ++itemIndex) {
-				const configurationItem: zxteam.Configuration = items[itemIndex];
-				if (configurationItem.hasKey(key)) { return configurationItem[method](key); }
+				const configurationItem: ConfigurationContract = items[itemIndex];
+				if (configurationItem.has(key)) { return configurationItem[method](key); }
 			}
 			if (defaultValue !== undefined) { return defaultValue; }
 			throw new Error("A value for key '" + key + "' was not found in current configuration.");
 		}
 		return bind;
 	}
-	const chainConfigurationInstance: zxteam.Configuration = {
+	const chainConfigurationInstance: ConfigurationContract = {
 		get: binder("get"),
 		getBoolean: binder("getBoolean"),
-		getConfiguration(configurationNamespace: string): zxteam.Configuration {
+		getConfiguration(configurationNamespace: string): ConfigurationContract {
 			return chainConfiguration(...items.map(item => item.getConfiguration(configurationNamespace)));
 		},
 		getEnabled: binder("getEnabled"),
 		getFloat: binder("getFloat"),
 		getInteger: binder("getInteger"),
 		getString: binder("getString"),
-		hasKey(key: string): boolean {
+		has(key: string): boolean {
 			for (let itemIndex = 0; itemIndex < items.length; ++itemIndex) {
-				if (items[itemIndex].hasKey(key)) { return true; }
+				if (items[itemIndex].has(key)) { return true; }
+			}
+			return false;
+		},
+		hasKey(key: string): boolean {
+			return chainConfigurationInstance.has(key);
+		},
+		hasNonEmpty(key: string): boolean {
+			for (let itemIndex = 0; itemIndex < items.length; ++itemIndex) {
+				const item = items[itemIndex];
+				if (item.has(key)) {
+					return item.hasNonEmpty(key);
+				}
 			}
 			return false;
 		},
@@ -43,14 +56,14 @@ export function chainConfiguration(...configurations: ReadonlyArray<zxteam.Confi
 	};
 	return chainConfigurationInstance;
 }
-export function fileConfiguration(configFile: string): zxteam.Configuration {
+export function fileConfiguration(configFile: string): ConfigurationContract {
 	const dict: Configuration.Dictionary = {};
 	propertiesFileContentProcessor(configFile, (name: string, value: string) => {
 		dict[name] = value;
 	});
 	return new Configuration(dict);
 }
-export function envConfiguration(): zxteam.Configuration {
+export function envConfiguration(): ConfigurationContract {
 	const dict: Configuration.Dictionary = {};
 	_.entries(process.env).forEach(([name, value]) => {
 		if (value !== undefined) {
@@ -59,11 +72,11 @@ export function envConfiguration(): zxteam.Configuration {
 	});
 	return new Configuration(dict);
 }
-export function cmdConfiguration(): zxteam.Configuration {
+export function cmdConfiguration(): ConfigurationContract {
 	//TODO
 	throw new Error("Not implemented yet");
 }
-export async function swarmSecretsConfiguration(directory?: string): Promise<zxteam.Configuration> {
+export async function swarmSecretsConfiguration(directory?: string): Promise<ConfigurationContract> {
 	if (directory === undefined) {
 		// Setup default dir
 		// https://docs.docker.com/engine/swarm/secrets/
@@ -85,8 +98,8 @@ export async function swarmSecretsConfiguration(directory?: string): Promise<zxt
 
 	return new Configuration(dict);
 }
-export function develVirtualFilesConfiguration(configDir: string, develSite: string): zxteam.Configuration {
-	if (!configDir) { throw new ArgumentException("configDir"); }
+export function develVirtualFilesConfiguration(configDir: string, develSite: string): ConfigurationContract {
+	if (!configDir) { throw new ArgumentError("configDir"); }
 	if (!fs.existsSync(configDir)) { throw new Error("Bad configuration directory (not exists): " + configDir); }
 	const projectConfigDir = path.join(configDir, "project.properties");
 
@@ -120,7 +133,7 @@ export namespace Configuration {
 	export type Dictionary = { [key: string]: string };
 }
 
-export class Configuration implements zxteam.Configuration {
+export class Configuration implements ConfigurationContract {
 	private readonly _dict: Configuration.Dictionary;
 	private readonly _parentNamespace?: string;
 
@@ -131,8 +144,8 @@ export class Configuration implements zxteam.Configuration {
 		}
 	}
 
-	public getConfiguration(configurationNamespace: string): zxteam.Configuration {
-		if (!configurationNamespace) { throw new ArgumentException("configurationNamespace"); }
+	public getConfiguration(configurationNamespace: string): ConfigurationContract {
+		if (!configurationNamespace) { throw new ArgumentError("configurationNamespace"); }
 		const subDict: Configuration.Dictionary = {};
 		const criteria = configurationNamespace + ".";
 		const criteriaLen = criteria.length;
@@ -146,7 +159,7 @@ export class Configuration implements zxteam.Configuration {
 	}
 
 	public get(key: string): boolean | number | string {
-		if (!key) { throw new ArgumentException("key"); }
+		if (!key) { throw new ArgumentError("key"); }
 		if (key in this._dict) {
 			const value = this._dict[key];
 			return value;
@@ -155,7 +168,7 @@ export class Configuration implements zxteam.Configuration {
 	}
 
 	public getBoolean(key: string, defaultValue?: boolean): boolean {
-		if (!key) { throw new ArgumentException("key"); }
+		if (!key) { throw new ArgumentError("key"); }
 		if (key in this._dict) {
 			const value = this._dict[key];
 			if (value === "true") { return true; }
@@ -168,7 +181,7 @@ export class Configuration implements zxteam.Configuration {
 	}
 
 	public getInteger(key: string, defaultValue?: number): number {
-		if (!key) { throw new ArgumentException("key"); }
+		if (!key) { throw new ArgumentError("key"); }
 		if (key in this._dict) {
 			const value = this._dict[key];
 			const friendlyValue = parseInt(value);
@@ -181,7 +194,7 @@ export class Configuration implements zxteam.Configuration {
 	}
 
 	public getFloat(key: string, defaultValue?: number): number {
-		if (!key) { throw new ArgumentException("key"); }
+		if (!key) { throw new ArgumentError("key"); }
 		if (key in this._dict) {
 			const value = this._dict[key];
 			const friendlyValue = parseFloat(value);
@@ -194,7 +207,7 @@ export class Configuration implements zxteam.Configuration {
 	}
 
 	public getEnabled(key: string, defaultValue?: boolean): boolean {
-		if (!key) { throw new ArgumentException("key"); }
+		if (!key) { throw new ArgumentError("key"); }
 		if (key in this._dict) {
 			const value = this._dict[key];
 			if (value === "enabled") { return true; }
@@ -207,15 +220,31 @@ export class Configuration implements zxteam.Configuration {
 	}
 
 	public getString(key: string, defaultValue?: string): string {
-		if (!key) { throw new ArgumentException("key"); }
+		if (!key) { throw new ArgumentError("key"); }
 		if (key in this._dict) { return this._dict[key]; }
 		if (defaultValue !== undefined) { return defaultValue; }
 		throw new Error(this.generateWrongKeyErrorMessage(key));
 	}
 
-	public hasKey(key: string): boolean {
-		if (!key) { throw new ArgumentException("key"); }
+	public has(key: string): boolean {
+		if (!key) { throw new ArgumentError("key"); }
 		return key in this._dict;
+	}
+
+	/**
+	 * @deprecated
+	 */
+	public hasKey(key: string): boolean {
+		return this.has(key);
+	}
+
+	public hasNonEmpty(key: string): boolean {
+		if (!key) { throw new ArgumentError("key"); }
+		if (key in this._dict) {
+			const value = this._dict[key];
+			return !_.isEmpty(value);
+		}
+		return false;
 	}
 
 	public keys(): ReadonlyArray<string> {
@@ -243,12 +272,7 @@ function propertiesFileContentProcessor(file: string, cb: (name: string, value: 
 			const name: string = line.substr(0, indexOfEq).trim();
 			const value: string = line.substr(indexOfEq + 1).trim();
 			cb(name, value);
-
 		}
 	});
-}
-
-class ArgumentException extends Error {
-	public readonly name = "ArgumentError";
 }
 
