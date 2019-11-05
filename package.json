@@ -1,6 +1,6 @@
 {
 	"name": "@zxteam/configuration",
-	"version": "6.0.23",
+	"version": "6.0.27",
 	"description": "Configuration implementation of the ZXTeam's Contact",
 	"author": {
 		"name": "ZXTeam",
@@ -20,7 +20,7 @@
 	],
 	"license": "MIT",
 	"dependencies": {
-		"@zxteam/contract": "^6.0.23",
+		"@zxteam/contract": "^6.0.27",
 		"@zxteam/errors": "^6.0.21",
 		"lodash": "^4.17.15",
 		"username": "^5.1.0"

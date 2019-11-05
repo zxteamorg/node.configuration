@@ -52,7 +52,9 @@ export function chainConfiguration(...configurations: ReadonlyArray<Configuratio
 			}
 			return false;
 		},
-		keys() { return _.union(...items.map(item => Object.keys(item))); }
+		keys() {
+			return _.union(...items.map(item => item.keys()));
+		}
 	};
 	return chainConfigurationInstance;
 }
