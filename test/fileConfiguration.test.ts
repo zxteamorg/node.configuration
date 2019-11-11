@@ -443,7 +443,7 @@ describe("Negative test", function () {
 			config.getConfiguration("a").getConfiguration("b").getConfiguration("c").getURL("url");
 		} catch (err) {
 			assert((<any>err).message.startsWith("Bad type of key "));
-			assert.include((<any>err).message, "\"a.b.c.url\"");
+			assert.include((<any>err).message, "'a.b.c.url'");
 			return;
 		}
 		assert.fail("Should never happened");
