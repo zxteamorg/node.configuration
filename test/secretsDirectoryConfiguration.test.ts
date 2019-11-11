@@ -8,7 +8,7 @@ import * as username from "username";
 
 import * as thislib from "../src";
 
-describe("swarmSecretsConfiguration tests", function () {
+describe("secretsDirectoryConfiguration tests", function () {
 	let tempDirectoryObj: tmp.DirResult;
 	let configuration: Configuration;
 	before(async () => {
@@ -22,7 +22,7 @@ describe("swarmSecretsConfiguration tests", function () {
 			path.join(tempDirectoryObj.name, "config.db.port"),
 			"5432"
 		);
-		configuration = await thislib.swarmSecretsConfiguration(tempDirectoryObj.name);
+		configuration = await thislib.secretsDirectoryConfiguration(tempDirectoryObj.name);
 	});
 	after(() => {
 		tempDirectoryObj.removeCallback();

@@ -78,7 +78,12 @@ export function cmdConfiguration(): ConfigurationContract {
 	//TODO
 	throw new Error("Not implemented yet");
 }
-export async function swarmSecretsConfiguration(directory?: string): Promise<ConfigurationContract> {
+/**
+ * Loading values from files. A filename is used as key name.
+ * Main reason for this is https://docs.docker.com/engine/swarm/secrets/
+ * @param directory a directory where secret files are placed
+ */
+export async function secretsDirectoryConfiguration(directory?: string): Promise<ConfigurationContract> {
 	if (directory === undefined) {
 		// Setup default dir
 		// https://docs.docker.com/engine/swarm/secrets/
