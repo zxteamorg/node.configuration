@@ -26,6 +26,7 @@ export function chainConfiguration(...configurations: ReadonlyArray<Configuratio
 	}
 	const chainConfigurationInstance: ConfigurationContract = {
 		get: binder("get"),
+		getBase64: binder("getBase64"),
 		getBoolean: binder("getBoolean"),
 		getConfiguration(configurationNamespace: string): ConfigurationContract {
 			return chainConfiguration(...items.map(item => item.getConfiguration(configurationNamespace)));
@@ -34,6 +35,7 @@ export function chainConfiguration(...configurations: ReadonlyArray<Configuratio
 		getFloat: binder("getFloat"),
 		getInteger: binder("getInteger"),
 		getString: binder("getString"),
+		getURL: binder("getURL"),
 		has(key: string): boolean {
 			for (let itemIndex = 0; itemIndex < items.length; ++itemIndex) {
 				if (items[itemIndex].has(key)) { return true; }
@@ -174,6 +176,23 @@ export class Configuration implements ConfigurationContract {
 		throw new Error(this.generateWrongKeyErrorMessage(key));
 	}
 
+	public getBase64(key: string, defaultValue?: Uint8Array): Uint8Array {
+		if (!key) { throw new ArgumentError("key"); }
+		if (key in this._dict) {
+			const value = this._dict[key];
+			const parsedData = Buffer.from(value, "base64");
+			const restoredValue = parsedData.toString("base64");
+			if (restoredValue !== value) {
+				const partOfValue = value.slice(0, 4);
+				const maskValue = `${partOfValue}...`;
+				throw new Error(`Bad type of key '${key}'. Cannot parse value '${maskValue}' as base64.`);
+			}
+			return parsedData;
+		}
+		if (defaultValue !== undefined) { return defaultValue; }
+		throw new Error(this.generateWrongKeyErrorMessage(key));
+	}
+
 	public getBoolean(key: string, defaultValue?: boolean): boolean {
 		if (!key) { throw new ArgumentError("key"); }
 		if (key in this._dict) {
@@ -229,6 +248,22 @@ export class Configuration implements ConfigurationContract {
 	public getString(key: string, defaultValue?: string): string {
 		if (!key) { throw new ArgumentError("key"); }
 		if (key in this._dict) { return this._dict[key]; }
+		if (defaultValue !== undefined) { return defaultValue; }
+		throw new Error(this.generateWrongKeyErrorMessage(key));
+	}
+
+	public getURL(key: string, defaultValue?: URL): URL {
+		if (!key) { throw new ArgumentError("key"); }
+		if (key in this._dict) {
+			const value = this._dict[key];
+			try {
+				return new URL(value);
+			} catch (e) {
+				const partOfValue = value.slice(0, 4);
+				const maskValue = `${partOfValue}...`;
+				throw new Error(`Bad type of key '${key}'. Cannot parse value '${maskValue}' as URL.`);
+			}
+		}
 		if (defaultValue !== undefined) { return defaultValue; }
 		throw new Error(this.generateWrongKeyErrorMessage(key));
 	}

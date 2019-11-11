@@ -145,7 +145,9 @@ describe("Checks all methods with type", function () {
 			"floatA = 123.123\r\n" +
 			"object = { hello: world }\r\n" +
 			"enabledType = enabled\r\n" +
-			"disabledType = disabled\r\n"
+			"disabledType = disabled\r\n" +
+			"base64Type = AQID\r\n" +
+			"urlType = https://user:password@host.local/test?a=123\r\n"
 		);
 	});
 
@@ -190,6 +192,19 @@ describe("Checks all methods with type", function () {
 	});
 	it("Should be return floatA", function () {
 		assert.equal(config.getFloat("floatA"), 123.123);
+	});
+	it("Should be return Base64", function () {
+		const data = config.getBase64("base64Type");
+		assert.instanceOf(data, Uint8Array);
+		assert.equal(data.length, 3);
+		assert.equal(data[0], 1);
+		assert.equal(data[1], 2);
+		assert.equal(data[2], 3);
+	});
+	it("Should be return URL", function () {
+		const data = config.getURL("urlType");
+		assert.instanceOf(data, URL);
+		assert.equal(data.toString(), "https://user:password@host.local/test?a=123");
 	});
 });
 describe("Checks all methods default value", function () {
@@ -259,7 +274,9 @@ describe("Negative test", function () {
 			"boolean = 123\r\n" +
 			"int = fake\r\n" +
 			"float = fake\r\n" +
-			"enable = fake\r\n"
+			"enable = fake\r\n" +
+			"base64 = wrong_base64\r\n" +
+			"url = wrong_url"
 		);
 	});
 
@@ -406,6 +423,24 @@ describe("Negative test", function () {
 	it("Should be execution error Bad type of key on getEnabled", function () {
 		try {
 			config.getEnabled("enable");
+		} catch (err) {
+			assert((<any>err).message.startsWith("Bad type of key "));
+			return;
+		}
+		assert.fail("Should never happened");
+	});
+	it("Should be execution error Bad type of key on getBase64", function () {
+		try {
+			config.getBase64("base64");
+		} catch (err) {
+			assert((<any>err).message.startsWith("Bad type of key "));
+			return;
+		}
+		assert.fail("Should never happened");
+	});
+	it("Should be execution error Bad type of key on getURL", function () {
+		try {
+			config.getURL("url");
 		} catch (err) {
 			assert((<any>err).message.startsWith("Bad type of key "));
 			return;

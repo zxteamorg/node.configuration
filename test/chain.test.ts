@@ -8,12 +8,14 @@ describe("chainConfiguration tests", function () {
 	it("Generic test", function () {
 		const fakeConfguraton0: zxteam.Configuration = {
 			get(key: string) { throw new Error(); },
+			getBase64(key: string) { throw new Error(); },
 			getBoolean(key: string, defaultValue?: boolean): boolean { throw new Error(); },
 			getConfiguration(configurationNamespace: string): zxteam.Configuration { throw new Error(); },
 			getEnabled(key: string, defaultValue?: boolean): boolean { throw new Error(); },
 			getFloat(key: string, defaultValue?: number): number { if (key === "ageFloat") { return 0; } throw new Error(); },
 			getInteger(key: string, defaultValue?: number): number { if (key === "ageInt") { return 0; } throw new Error(); },
 			getString(key: string, defaultValue?: string): string { if (key === "ageString") { return "0"; } throw new Error(); },
+			getURL(key: string) { throw new Error(); },
 			has(key: string): boolean { return ["ageString", "ageInt", "ageFloat"].includes(key); },
 			hasKey(key: string): boolean { return fakeConfguraton0.has(key); },
 			hasNonEmpty(key: string): boolean { throw new Error(); },
@@ -21,12 +23,14 @@ describe("chainConfiguration tests", function () {
 		};
 		const fakeConfguraton1: zxteam.Configuration = {
 			get(key: string) { throw new Error(); },
+			getBase64(key: string) { throw new Error(); },
 			getBoolean(key: string, defaultValue?: boolean): boolean { throw new Error(); },
 			getConfiguration(configurationNamespace: string): zxteam.Configuration { throw new Error(); },
 			getEnabled(key: string, defaultValue?: boolean): boolean { throw new Error(); },
 			getFloat(key: string, defaultValue?: number): number { throw new Error(); },
 			getInteger(key: string, defaultValue?: number): number { if (key === "ageInt") { return 1; } throw new Error(); },
 			getString(key: string, defaultValue?: string): string { if (key === "ageString") { return "1"; } throw new Error(); },
+			getURL(key: string) { throw new Error(); },
 			has(key: string): boolean { return ["ageString", "ageInt"].includes(key); },
 			hasKey(key: string): boolean { throw new Error(); },
 			hasNonEmpty(key: string): boolean { return fakeConfguraton1.has(key); },
@@ -34,12 +38,14 @@ describe("chainConfiguration tests", function () {
 		};
 		const fakeConfguraton2: zxteam.Configuration = {
 			get(key: string) { throw new Error(); },
+			getBase64(key: string) { throw new Error(); },
 			getBoolean(key: string, defaultValue?: boolean): boolean { throw new Error(); },
 			getConfiguration(configurationNamespace: string): zxteam.Configuration { throw new Error(); },
 			getEnabled(key: string, defaultValue?: boolean): boolean { throw new Error(); },
 			getFloat(key: string, defaultValue?: number): number { throw new Error(); },
 			getInteger(key: string, defaultValue?: number): number { throw new Error(); },
 			getString(key: string, defaultValue?: string): string { if (key === "ageString") { return "2"; } throw new Error(); },
+			getURL(key: string) { throw new Error(); },
 			has(key: string): boolean { return ["ageString"].includes(key); },
 			hasKey(key: string): boolean { throw new Error(); },
 			hasNonEmpty(key: string): boolean { return fakeConfguraton2.has(key); },
