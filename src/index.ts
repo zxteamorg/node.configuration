@@ -164,7 +164,9 @@ export class Configuration implements ConfigurationContract {
 				subDict[key.substring(criteriaLen)] = value;
 			}
 		});
-		return new Configuration(subDict, configurationNamespace);
+		const parentNamespace = this._parentNamespace !== undefined ?
+			`${this._parentNamespace}.${configurationNamespace}` : configurationNamespace;
+		return new Configuration(subDict, parentNamespace);
 	}
 
 	public get(key: string): boolean | number | string {
@@ -185,7 +187,8 @@ export class Configuration implements ConfigurationContract {
 			if (restoredValue !== value) {
 				const partOfValue = value.slice(0, 4);
 				const maskValue = `${partOfValue}...`;
-				throw new Error(`Bad type of key '${key}'. Cannot parse value '${maskValue}' as base64.`);
+				const fullKeyName = this.getFullKey(key);
+				throw new Error(`Bad type of key '${fullKeyName}'. Cannot parse value '${maskValue}' as base64.`);
 			}
 			return parsedData;
 		}
@@ -199,8 +202,8 @@ export class Configuration implements ConfigurationContract {
 			const value = this._dict[key];
 			if (value === "true") { return true; }
 			if (value === "false") { return false; }
-			throw new Error("Bad type of key '" + key + "'. Cannot convert the value '"
-				+ value + "' to boolean type.");
+			const fullKeyName = this.getFullKey(key);
+			throw new Error(`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to boolean type.`);
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
 		throw new Error(this.generateWrongKeyErrorMessage(key));
@@ -212,8 +215,8 @@ export class Configuration implements ConfigurationContract {
 			const value = this._dict[key];
 			const friendlyValue = parseInt(value);
 			if (friendlyValue.toString() === value) { return friendlyValue; }
-			throw new Error("Bad type of key '" + key + "'. Cannot convert the value '"
-				+ value + "' to integer type.");
+			const fullKeyName = this.getFullKey(key);
+			throw new Error(`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to integer type.`);
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
 		throw new Error(this.generateWrongKeyErrorMessage(key));
@@ -225,8 +228,8 @@ export class Configuration implements ConfigurationContract {
 			const value = this._dict[key];
 			const friendlyValue = parseFloat(value);
 			if (friendlyValue.toString() === value) { return friendlyValue; }
-			throw new Error("Bad type of key '" + key + "'. Cannot convert the value '"
-				+ value + "' to float type.");
+			const fullKeyName = this.getFullKey(key);
+			throw new Error(`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to float type.`);
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
 		throw new Error(this.generateWrongKeyErrorMessage(key));
@@ -238,8 +241,8 @@ export class Configuration implements ConfigurationContract {
 			const value = this._dict[key];
 			if (value === "enabled") { return true; }
 			if (value === "disabled") { return false; }
-			throw new Error("Bad type of key '" + key + "'. Cannot convert the value '"
-				+ value + "' to enabled boolean value.");
+			const fullKeyName = this.getFullKey(key);
+			throw new Error(`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to enabled boolean value.`);
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
 		throw new Error(this.generateWrongKeyErrorMessage(key));
@@ -261,7 +264,8 @@ export class Configuration implements ConfigurationContract {
 			} catch (e) {
 				const partOfValue = value.slice(0, 4);
 				const maskValue = `${partOfValue}...`;
-				throw new Error(`Bad type of key '${key}'. Cannot parse value '${maskValue}' as URL.`);
+				const fullKeyName = this.getFullKey(key);
+				throw new Error(`Bad type of key '${fullKeyName}'. Cannot parse value '${maskValue}' as URL.`);
 			}
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
@@ -293,6 +297,13 @@ export class Configuration implements ConfigurationContract {
 		return Object.keys(this._dict);
 	}
 
+	private getFullKey(key: string): string {
+		if (this._parentNamespace !== undefined) {
+			return `${this._parentNamespace}.${key}`;
+		}
+		return key;
+	}
+
 	private generateWrongKeyErrorMessage(key: string): string {
 		if (this._parentNamespace !== undefined) {
 			return `A value for key '${this._parentNamespace}.${key}' was not found in current configuration.`;
@@ -317,4 +328,3 @@ function propertiesFileContentProcessor(file: string, cb: (name: string, value: 
 		}
 	});
 }
-

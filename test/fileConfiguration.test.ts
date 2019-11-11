@@ -276,7 +276,7 @@ describe("Negative test", function () {
 			"float = fake\r\n" +
 			"enable = fake\r\n" +
 			"base64 = wrong_base64\r\n" +
-			"url = wrong_url"
+			"a.b.c.url = wrong_url"
 		);
 	});
 
@@ -440,9 +440,10 @@ describe("Negative test", function () {
 	});
 	it("Should be execution error Bad type of key on getURL", function () {
 		try {
-			config.getURL("url");
+			config.getConfiguration("a").getConfiguration("b").getConfiguration("c").getURL("url");
 		} catch (err) {
 			assert((<any>err).message.startsWith("Bad type of key "));
+			assert.include((<any>err).message, "\"a.b.c.url\"");
 			return;
 		}
 		assert.fail("Should never happened");
