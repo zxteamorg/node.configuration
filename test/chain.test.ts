@@ -17,7 +17,7 @@ describe("chainConfiguration tests", function () {
 			getString(key: string, defaultValue?: string): string { if (key === "ageString") { return "0"; } throw new Error(); },
 			getURL(key: string) { throw new Error(); },
 			has(key: string): boolean { return ["ageString", "ageInt", "ageFloat"].includes(key); },
-			hasKey(key: string): boolean { return fakeConfguraton0.has(key); },
+			hasNamespace(configurationNamespace: string): boolean { throw new Error(); },
 			hasNonEmpty(key: string): boolean { throw new Error(); },
 			keys() { return ["ageString", "ageInt", "ageFloat"]; }
 		};
@@ -32,7 +32,7 @@ describe("chainConfiguration tests", function () {
 			getString(key: string, defaultValue?: string): string { if (key === "ageString") { return "1"; } throw new Error(); },
 			getURL(key: string) { throw new Error(); },
 			has(key: string): boolean { return ["ageString", "ageInt"].includes(key); },
-			hasKey(key: string): boolean { throw new Error(); },
+			hasNamespace(configurationNamespace: string): boolean { throw new Error(); },
 			hasNonEmpty(key: string): boolean { return fakeConfguraton1.has(key); },
 			keys() { return ["ageInt", "ageString"]; }
 		};
@@ -47,7 +47,7 @@ describe("chainConfiguration tests", function () {
 			getString(key: string, defaultValue?: string): string { if (key === "ageString") { return "2"; } throw new Error(); },
 			getURL(key: string) { throw new Error(); },
 			has(key: string): boolean { return ["ageString"].includes(key); },
-			hasKey(key: string): boolean { throw new Error(); },
+			hasNamespace(configurationNamespace: string): boolean { throw new Error(); },
 			hasNonEmpty(key: string): boolean { return fakeConfguraton2.has(key); },
 			keys() { return ["ageString"]; }
 		};

@@ -42,8 +42,14 @@ export function chainConfiguration(...configurations: ReadonlyArray<Configuratio
 			}
 			return false;
 		},
-		hasKey(key: string): boolean {
-			return chainConfigurationInstance.has(key);
+		hasNamespace(configurationNamespace: string): boolean {
+			for (let itemIndex = 0; itemIndex < items.length; ++itemIndex) {
+				const item = items[itemIndex];
+				if (item.hasNamespace(configurationNamespace)) {
+					return true;
+				}
+			}
+			return false;
 		},
 		hasNonEmpty(key: string): boolean {
 			for (let itemIndex = 0; itemIndex < items.length; ++itemIndex) {
@@ -164,6 +170,10 @@ export class Configuration implements ConfigurationContract {
 				subDict[key.substring(criteriaLen)] = value;
 			}
 		});
+		if (Object.keys(subDict).length === 0) {
+			const fullKeyName = this.getFullKey(configurationNamespace);
+			throw new Error(`Namespace '${fullKeyName}' was not found in the configuration.`);
+		}
 		const parentNamespace = this._parentNamespace !== undefined ?
 			`${this._parentNamespace}.${configurationNamespace}` : configurationNamespace;
 		return new Configuration(subDict, parentNamespace);
@@ -277,11 +287,15 @@ export class Configuration implements ConfigurationContract {
 		return key in this._dict;
 	}
 
-	/**
-	 * @deprecated
-	 */
-	public hasKey(key: string): boolean {
-		return this.has(key);
+	public hasNamespace(configurationNamespace: string): boolean {
+		const criteria = configurationNamespace + ".";
+		const criteriaLen = criteria.length;
+		for (const key of Object.keys(this._dict)) {
+			if (key.length > criteriaLen && key.startsWith(criteria)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public hasNonEmpty(key: string): boolean {

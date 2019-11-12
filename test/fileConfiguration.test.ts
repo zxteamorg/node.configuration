@@ -303,6 +303,20 @@ describe("Negative test", function () {
 		}
 		assert.fail("Should never happened");
 	});
+	it("Should be execution error Wrong argument on getConfiguration", function () {
+		try {
+			config.getConfiguration("a.b").getConfiguration("o.l.o.l.o");
+		} catch (err) {
+			assert.instanceOf(err, Error);
+			assert.include((<Error>err).message, "'a.b.o.l.o.l.o'");
+			return;
+		}
+		assert.fail("Should never happened");
+	});
+	it("Should be execution error Wrong argument on getConfiguration", function () {
+		assert.isTrue(config.getConfiguration("a.b").hasNamespace("c"), "Should exist: a.b.c");
+		assert.isFalse(config.getConfiguration("a.b").hasNamespace("o.l.o.l.o"), "Should not exist: a.b.o.l.o.l.o");
+	});
 	it("Should be execution error Wrong argument on getEnabled", function () {
 		try {
 			let empty: any;
