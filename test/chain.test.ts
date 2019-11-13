@@ -7,6 +7,7 @@ import * as thislib from "../src";
 describe("chainConfiguration tests", function () {
 	it("Generic test", function () {
 		const fakeConfguraton0: zxteam.Configuration = {
+			configurationNamespace: "",
 			get(key: string) { throw new Error(); },
 			getBase64(key: string) { throw new Error(); },
 			getBoolean(key: string, defaultValue?: boolean): boolean { throw new Error(); },
@@ -22,6 +23,7 @@ describe("chainConfiguration tests", function () {
 			keys() { return ["ageString", "ageInt", "ageFloat"]; }
 		};
 		const fakeConfguraton1: zxteam.Configuration = {
+			configurationNamespace: "",
 			get(key: string) { throw new Error(); },
 			getBase64(key: string) { throw new Error(); },
 			getBoolean(key: string, defaultValue?: boolean): boolean { throw new Error(); },
@@ -37,6 +39,7 @@ describe("chainConfiguration tests", function () {
 			keys() { return ["ageInt", "ageString"]; }
 		};
 		const fakeConfguraton2: zxteam.Configuration = {
+			configurationNamespace: "",
 			get(key: string) { throw new Error(); },
 			getBase64(key: string) { throw new Error(); },
 			getBoolean(key: string, defaultValue?: boolean): boolean { throw new Error(); },
@@ -94,10 +97,10 @@ describe("chainConfiguration tests", function () {
 	});
 
 	it("Bug: 6.0.33", function () {
-		const cfg1  = new thislib.Configuration({
+		const cfg1 = new thislib.Configuration({
 			"bla": "bla"
 		});
-		const cfg2  = new thislib.Configuration({
+		const cfg2 = new thislib.Configuration({
 			"endpoint.0.type": "rest",
 			"endpoint.0.servers": "main",
 			"endpoint.0.bindPath": "/",
@@ -110,11 +113,26 @@ describe("chainConfiguration tests", function () {
 		const endpointsConfiguration = chainConfiguration.getString("endpoints");
 		assert.equal(endpointsConfiguration, "0");
 
-		const endpointConfiguration = chainConfiguration.getConfiguration(`endpoint.0`);
-		assert.isObject(endpointConfiguration);
+		const endpointRootConfiguration = chainConfiguration.getConfiguration(`endpoint`);
+		assert.equal(endpointRootConfiguration.configurationNamespace, "endpoint");
+
+		const endpointConfiguration = endpointRootConfiguration.getConfiguration(`0`);
+		assert.equal(endpointConfiguration.configurationNamespace, "endpoint.0");
 		assert.equal(endpointConfiguration.getString("type"), "rest");
 		assert.equal(endpointConfiguration.getString("servers"), "main");
 		assert.equal(endpointConfiguration.getString("bindPath"), "/");
 	});
 
+	it("Should return Default value", function () {
+		const cfg1 = new thislib.Configuration({
+			"bla": "bla"
+		});
+		const cfg2 = new thislib.Configuration({
+			"la": "la"
+		});
+
+		const chainConfiguration = thislib.chainConfiguration(cfg1, cfg2);
+
+		assert.equal(chainConfiguration.getString("non", "non"), "non");
+	});
 });

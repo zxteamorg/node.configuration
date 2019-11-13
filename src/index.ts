@@ -12,12 +12,19 @@ const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 
 export function chainConfiguration(...configurations: ReadonlyArray<ConfigurationContract>): ConfigurationContract {
+	if (configurations.length === 0) {
+		throw new ArgumentError("configurations", "Expected at least one sub configuration");
+	}
 	const items = configurations.slice();
-	function binder(method: keyof ConfigurationContract): (key: string, defaultValue?: any) => any {
+	function binder(
+		method: keyof ConfigurationContract, callback: (configurationItem: ConfigurationContract, key: string) => any
+	): (key: string, defaultValue?: any) => any {
 		function bind(key: string, defaultValue?: any) {
 			for (let itemIndex = 0; itemIndex < items.length; ++itemIndex) {
 				const configurationItem: ConfigurationContract = items[itemIndex];
-				if (configurationItem.has(key)) { return configurationItem[method](key); }
+				if (configurationItem.has(key)) {
+					return callback(configurationItem, key);
+				}
 			}
 			if (defaultValue !== undefined) { return defaultValue; }
 			throw new Error("A value for key '" + key + "' was not found in current configuration.");
@@ -25,9 +32,10 @@ export function chainConfiguration(...configurations: ReadonlyArray<Configuratio
 		return bind;
 	}
 	const chainConfigurationInstance: ConfigurationContract = {
-		get: binder("get"),
-		getBase64: binder("getBase64"),
-		getBoolean: binder("getBoolean"),
+		get configurationNamespace() { return items[0].configurationNamespace; },
+		get: binder("get", (cfg, key) => cfg.get(key)),
+		getBase64: binder("getBase64", (cfg, key) => cfg.getBase64(key)),
+		getBoolean: binder("getBoolean", (cfg, key) => cfg.getBoolean(key)),
 		getConfiguration(configurationNamespace: string): ConfigurationContract {
 			const subItems: Array<ConfigurationContract> = [];
 			items.forEach(function (item) {
@@ -37,11 +45,11 @@ export function chainConfiguration(...configurations: ReadonlyArray<Configuratio
 			});
 			return chainConfiguration(...subItems);
 		},
-		getEnabled: binder("getEnabled"),
-		getFloat: binder("getFloat"),
-		getInteger: binder("getInteger"),
-		getString: binder("getString"),
-		getURL: binder("getURL"),
+		getEnabled: binder("getEnabled", (cfg, key) => cfg.getEnabled(key)),
+		getFloat: binder("getFloat", (cfg, key) => cfg.getFloat(key)),
+		getInteger: binder("getInteger", (cfg, key) => cfg.getInteger(key)),
+		getString: binder("getString", (cfg, key) => cfg.getString(key)),
+		getURL: binder("getURL", (cfg, key) => cfg.getURL(key)),
 		has(key: string): boolean {
 			for (let itemIndex = 0; itemIndex < items.length; ++itemIndex) {
 				if (items[itemIndex].has(key)) { return true; }
@@ -163,6 +171,13 @@ export class Configuration implements ConfigurationContract {
 		if (parentNamespace !== undefined) {
 			this._parentNamespace = parentNamespace;
 		}
+	}
+
+	public get configurationNamespace(): string {
+		if (this._parentNamespace !== undefined) {
+			return this._parentNamespace;
+		}
+		return "";
 	}
 
 	public getConfiguration(configurationNamespace: string): ConfigurationContract {
