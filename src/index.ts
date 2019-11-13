@@ -29,7 +29,13 @@ export function chainConfiguration(...configurations: ReadonlyArray<Configuratio
 		getBase64: binder("getBase64"),
 		getBoolean: binder("getBoolean"),
 		getConfiguration(configurationNamespace: string): ConfigurationContract {
-			return chainConfiguration(...items.map(item => item.getConfiguration(configurationNamespace)));
+			const subItems: Array<ConfigurationContract> = [];
+			items.forEach(function (item) {
+				if (item.hasNamespace(configurationNamespace)) {
+					subItems.push(item.getConfiguration(configurationNamespace));
+				}
+			});
+			return chainConfiguration(...subItems);
 		},
 		getEnabled: binder("getEnabled"),
 		getFloat: binder("getFloat"),
