@@ -92,4 +92,29 @@ describe("chainConfiguration tests", function () {
 		assert.isFalse(chain.hasNonEmpty("foo"));
 		assert.equal(chain.getString("foo"), "", "Should take empty value from overrideConfig");
 	});
+
+	it("Bug: 6.0.33", function () {
+		const cfg1  = new thislib.Configuration({
+			"bla": "bla"
+		});
+		const cfg2  = new thislib.Configuration({
+			"endpoint.0.type": "rest",
+			"endpoint.0.servers": "main",
+			"endpoint.0.bindPath": "/",
+			"endpoints": "0"
+		});
+
+		const chainConfiguration = thislib.chainConfiguration(cfg1, cfg2);
+		assert.isObject(chainConfiguration);
+
+		const endpointsConfiguration = chainConfiguration.getString("endpoints");
+		assert.equal(endpointsConfiguration, "0");
+
+		const endpointConfiguration = chainConfiguration.getConfiguration(`endpoint.0`);
+		assert.isObject(endpointConfiguration);
+		assert.equal(endpointConfiguration.getString("type"), "rest");
+		assert.equal(endpointConfiguration.getString("servers"), "main");
+		assert.equal(endpointConfiguration.getString("bindPath"), "/");
+	});
+
 });
