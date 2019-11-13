@@ -3,6 +3,7 @@ import * as zxteam from "@zxteam/contract";
 import { assert } from "chai";
 
 import * as thislib from "../src";
+import { ArgumentError } from "@zxteam/errors";
 
 describe("chainConfiguration tests", function () {
 	it("Generic test", function () {
@@ -134,5 +135,27 @@ describe("chainConfiguration tests", function () {
 		const chainConfiguration = thislib.chainConfiguration(cfg1, cfg2);
 
 		assert.equal(chainConfiguration.getString("non", "non"), "non");
+	});
+
+	it.only("Should raise error for not existing namespace", function () {
+		const cfg1 = new thislib.Configuration({
+			"bla": "bla"
+		});
+		const cfg2 = new thislib.Configuration({
+			"la": "la"
+		});
+
+		const chainConfiguration = thislib.chainConfiguration(cfg1, cfg2);
+
+		let expectedErr!: Error;
+		try {
+			chainConfiguration.getConfiguration("none");
+		} catch (e) {
+			expectedErr = e;
+		}
+
+		assert.isDefined(expectedErr);
+		assert.instanceOf(expectedErr, Error);
+		assert.include(expectedErr.message, "was not found");
 	});
 });
