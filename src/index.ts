@@ -43,6 +43,13 @@ export function chainConfiguration(...configurations: ReadonlyArray<Configuratio
 					subItems.push(item.getConfiguration(configurationNamespace));
 				}
 			});
+			if (subItems.length === 0) {
+				// Force underlaying config to raise error
+				items[0].getConfiguration(configurationNamespace);
+
+				// just a guard, should not happens if underlaying configuration is implemented correctly
+				throw new Error(`Namespace '${configurationNamespace}' was not found in the configuration.`);
+			}
 			return chainConfiguration(...subItems);
 		},
 		getEnabled: binder("getEnabled", (cfg, key) => cfg.getEnabled(key)),
