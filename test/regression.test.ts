@@ -36,7 +36,7 @@ describe("Regression tests", function () {
 		}
 	});
 
-	it.only("Method getURL() should raise error with full key name for sub-configuration (bug in 6.0.36)", function () {
+	it("Method getURL() should raise error with full key name for sub-configuration (bug in 6.0.36)", function () {
 		const config1: Configuration = new Configuration({
 			"a.url": "http://localhost:9090"
 		});

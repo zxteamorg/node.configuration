@@ -137,7 +137,7 @@ describe("chainConfiguration tests", function () {
 		assert.equal(chainConfiguration.getString("non", "non"), "non");
 	});
 
-	it.only("Should raise error for not existing namespace", function () {
+	it("Should raise error for not existing namespace", function () {
 		const cfg1 = new thislib.Configuration({
 			"bla": "bla"
 		});

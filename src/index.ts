@@ -27,7 +27,9 @@ export function chainConfiguration(...configurations: ReadonlyArray<Configuratio
 				}
 			}
 			if (defaultValue !== undefined) { return defaultValue; }
-			throw new Error("A value for key '" + key + "' was not found in current configuration.");
+			const item0 = items[0];
+			const parentNamespace = _.isEmpty(item0.configurationNamespace) ? undefined : item0.configurationNamespace;
+			throwWrongKeyError(key, parentNamespace);
 		}
 		return bind;
 	}
@@ -213,7 +215,7 @@ export class Configuration implements ConfigurationContract {
 			const value = this._dict[key];
 			return value;
 		}
-		throw new Error(this.generateWrongKeyErrorMessage(key));
+		throwWrongKeyError(key, this._parentNamespace);
 	}
 
 	public getBase64(key: string, defaultValue?: Uint8Array): Uint8Array {
@@ -231,7 +233,7 @@ export class Configuration implements ConfigurationContract {
 			return parsedData;
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
-		throw new Error(this.generateWrongKeyErrorMessage(key));
+		throwWrongKeyError(key, this._parentNamespace);
 	}
 
 	public getBoolean(key: string, defaultValue?: boolean): boolean {
@@ -244,7 +246,7 @@ export class Configuration implements ConfigurationContract {
 			throw new Error(`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to boolean type.`);
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
-		throw new Error(this.generateWrongKeyErrorMessage(key));
+		throwWrongKeyError(key, this._parentNamespace);
 	}
 
 	public getInteger(key: string, defaultValue?: number): number {
@@ -257,7 +259,7 @@ export class Configuration implements ConfigurationContract {
 			throw new Error(`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to integer type.`);
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
-		throw new Error(this.generateWrongKeyErrorMessage(key));
+		throwWrongKeyError(key, this._parentNamespace);
 	}
 
 	public getFloat(key: string, defaultValue?: number): number {
@@ -270,7 +272,7 @@ export class Configuration implements ConfigurationContract {
 			throw new Error(`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to float type.`);
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
-		throw new Error(this.generateWrongKeyErrorMessage(key));
+		throwWrongKeyError(key, this._parentNamespace);
 	}
 
 	public getEnabled(key: string, defaultValue?: boolean): boolean {
@@ -283,14 +285,14 @@ export class Configuration implements ConfigurationContract {
 			throw new Error(`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to enabled boolean value.`);
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
-		throw new Error(this.generateWrongKeyErrorMessage(key));
+		throwWrongKeyError(key, this._parentNamespace);
 	}
 
 	public getString(key: string, defaultValue?: string): string {
 		if (!key) { throw new ArgumentError("key"); }
 		if (key in this._dict) { return this._dict[key]; }
 		if (defaultValue !== undefined) { return defaultValue; }
-		throw new Error(this.generateWrongKeyErrorMessage(key));
+		throwWrongKeyError(key, this._parentNamespace);
 	}
 
 	public getURL(key: string, defaultValue?: URL): URL {
@@ -307,7 +309,7 @@ export class Configuration implements ConfigurationContract {
 			}
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
-		throw new Error(this.generateWrongKeyErrorMessage(key));
+		throwWrongKeyError(key, this._parentNamespace);
 	}
 
 	public has(key: string): boolean {
@@ -345,13 +347,6 @@ export class Configuration implements ConfigurationContract {
 		}
 		return key;
 	}
-
-	private generateWrongKeyErrorMessage(key: string): string {
-		if (this._parentNamespace !== undefined) {
-			return `A value for key '${this._parentNamespace}.${key}' was not found in current configuration.`;
-		}
-		return `A value for key '${key}' was not found in current configuration.`;
-	}
 }
 
 /*==========*/
@@ -369,4 +364,11 @@ function propertiesFileContentProcessor(file: string, cb: (name: string, value: 
 			cb(name, value);
 		}
 	});
+}
+
+function throwWrongKeyError(key: string, parentNamespace?: string): never {
+	if (parentNamespace !== undefined) {
+		throw new Error(`A value for key '${parentNamespace}.${key}' was not found in current configuration.`);
+	}
+	throw new Error(`A value for key '${key}' was not found in current configuration.`);
 }
