@@ -35,4 +35,28 @@ describe("Regression tests", function () {
 			assert.equal(keys[2], "b3");
 		}
 	});
+
+	it.only("Method getURL() should raise error with full key name for sub-configuration (bug in 6.0.36)", function () {
+		const config1: Configuration = new Configuration({
+			"a.url": "http://localhost:9090"
+		});
+		const config2: Configuration = new Configuration({
+			"a.url": "http://localhost:8080"
+		});
+
+		const config = chainConfiguration(config2, config1);
+		const subConfig = config.getConfiguration("a");
+
+		let expectedError!: Error;
+		try {
+			subConfig.getURL("wrongKey");
+		} catch (e) {
+			expectedError = e;
+		}
+
+		assert.isDefined(expectedError);
+		assert.instanceOf(expectedError, Error);
+
+		assert.include(expectedError.message, "a.wrongKey");
+	});
 });
