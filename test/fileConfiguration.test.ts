@@ -6,7 +6,7 @@ import { ArgumentError } from "@zxteam/errors";
 import * as path from "path";
 import * as fs from "fs";
 import * as tmp from "tmp";
-import * as username from "username";
+import {userInfo} from "os";
 
 import * as thislib from "../src";
 
@@ -15,7 +15,7 @@ describe("Development configuration test getString", function () {
 	before(() => {
 		// runs before all tests in this block
 		tempDirectoryObj = tmp.dirSync();
-		const currentUserName = username.sync();
+		const currentUserName = userInfo().username;
 		const projectConfigDir = path.join(tempDirectoryObj.name, "project.properties");
 		const userConfigDir = path.join(tempDirectoryObj.name, "user.properties");
 		fs.mkdirSync(projectConfigDir);

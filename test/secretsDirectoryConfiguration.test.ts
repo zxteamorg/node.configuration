@@ -4,7 +4,6 @@ import { assert } from "chai";
 import * as path from "path";
 import * as fs from "fs";
 import * as tmp from "tmp";
-import * as username from "username";
 
 import * as thislib from "../src";
 

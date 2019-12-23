@@ -4,7 +4,7 @@ import { ArgumentError } from "@zxteam/errors";
 import * as _ from "lodash";
 import * as path from "path";
 import * as fs from "fs";
-import * as username from "username";
+import { userInfo } from "os";
 import { promisify } from "util";
 
 const readFile = promisify(fs.readFile);
@@ -145,7 +145,7 @@ export function develVirtualFilesConfiguration(configDir: string, develSite: str
 	files.push(path.join(projectConfigDir, "config.properties"));
 	files.push(path.join(projectConfigDir, "config-" + develSite + ".properties"));
 	const userConfigDir = path.join(configDir, "user.properties");
-	const currentUserName = username.sync();
+	const currentUserName = userInfo().username;
 	if (currentUserName) {
 		files.push(path.join(userConfigDir, "config-" + currentUserName + ".properties"));
 	}
