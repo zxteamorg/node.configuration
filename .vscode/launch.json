@@ -17,7 +17,6 @@
 			"args": [
 				"--no-timeouts",
 				"--colors",
-				"--debug-brk",
 				"test/**/*.js"
 			],
 			"env": {

@@ -293,7 +293,7 @@ describe("Negative test", function () {
 		}
 		assert.fail("Should never happened");
 	});
-	it("Should be execution error Wrong argument on getConfiguration", function () {
+	it("Should be execution error Wrong argument on getConfiguration #1", function () {
 		try {
 			let empty: any;
 			config.getConfiguration(empty);
@@ -303,7 +303,7 @@ describe("Negative test", function () {
 		}
 		assert.fail("Should never happened");
 	});
-	it("Should be execution error Wrong argument on getConfiguration", function () {
+	it("Should be execution error Wrong argument on getConfiguration #2", function () {
 		try {
 			config.getConfiguration("a.b").getConfiguration("o.l.o.l.o");
 		} catch (err) {
@@ -313,7 +313,7 @@ describe("Negative test", function () {
 		}
 		assert.fail("Should never happened");
 	});
-	it("Should be execution error Wrong argument on getConfiguration", function () {
+	it("Should be execution error Wrong argument on getConfiguration #3", function () {
 		assert.isTrue(config.getConfiguration("a.b").hasNamespace("c"), "Should exist: a.b.c");
 		assert.isFalse(config.getConfiguration("a.b").hasNamespace("o.l.o.l.o"), "Should not exist: a.b.o.l.o.l.o");
 	});

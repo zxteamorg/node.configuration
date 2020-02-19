@@ -70,6 +70,12 @@ export function chainConfiguration(...configurations: ReadonlyArray<Configuratio
 				const item = items[itemIndex];
 				if (item.hasNamespace(configurationNamespace)) {
 					return true;
+				} else if (item.has(configurationNamespace)) {
+					const maskedNamespaceValue = item.get(configurationNamespace);
+					if (maskedNamespaceValue === "") {
+						// This is masked namespace
+						return false;
+					}
 				}
 			}
 			return false;
@@ -103,7 +109,14 @@ export function envConfiguration(): ConfigurationContract {
 			dict[name] = value;
 		}
 	});
-	return new Configuration(dict);
+	const config = new Configuration(dict);
+
+	// const adapter: ConfigurationContract = {
+	// 	get configurationNamespace() { return config.configurationNamespace; },
+	// 	get(key) { return config.get(key) },
+	// };
+
+	return config;
 }
 export function cmdConfiguration(): ConfigurationContract {
 	//TODO
@@ -348,6 +361,7 @@ export class Configuration implements ConfigurationContract {
 		return key;
 	}
 }
+
 
 /*==========*/
 /* INTERNAL */
