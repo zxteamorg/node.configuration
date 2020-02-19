@@ -59,4 +59,16 @@ describe("Regression tests", function () {
 
 		assert.include(expectedError.message, "a.wrongKey");
 	});
+
+	it("6.0.40: Ability to mask namespace in chain configuration", function () {
+		const config1: Configuration = new Configuration({
+			"a.ssl.ca": "/path/to/ca.crt"
+		});
+		const config2: Configuration = new Configuration({
+			"a.ssl": "" // Mask namespace "a.ssl"
+		});
+
+		const config = chainConfiguration(config2, config1);
+		assert.isFalse(config.hasNamespace("a.ssl"), "Namespace should be removed by empty value assingment");
+	});
 });
