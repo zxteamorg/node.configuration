@@ -347,7 +347,10 @@ export class Configuration implements ConfigurationContract {
 				const partOfValue = value.slice(0, 4);
 				const maskValue = `${partOfValue}...`;
 				const fullKeyName = this.getFullKey(key);
-				throw new ConfigurationError(`Bad type of key '${fullKeyName}'. Cannot parse value '${maskValue}' as URL.`, fullKeyName, e);
+				throw new ConfigurationError(
+					`Bad type of key '${fullKeyName}'. Cannot parse value '${maskValue}' as URL.`,
+					fullKeyName, null, e
+				);
 			}
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
