@@ -1,5 +1,5 @@
 import { Configuration as ConfigurationContract } from "@zxteam/contract";
-import { ArgumentError } from "@zxteam/errors";
+import { ArgumentError, ConfigurationError } from "@zxteam/errors";
 
 import * as _ from "lodash";
 import * as path from "path";
@@ -50,7 +50,10 @@ export function chainConfiguration(...configurations: ReadonlyArray<Configuratio
 				items[0].getConfiguration(configurationNamespace);
 
 				// just a guard, should not happens if underlaying configuration is implemented correctly
-				throw new Error(`Namespace '${configurationNamespace}' was not found in the configuration.`);
+				throw new ConfigurationError(
+					`Namespace '${configurationNamespace}' was not found in the configuration.`,
+					configurationNamespace, null
+				);
 			}
 			return chainConfiguration(...subItems);
 		},
@@ -120,7 +123,7 @@ export function envConfiguration(): ConfigurationContract {
 }
 export function cmdConfiguration(): ConfigurationContract {
 	//TODO
-	throw new Error("Not implemented yet");
+	throw new ConfigurationError("Not implemented yet", null, null);
 }
 /**
  * Loading values from files. A filename is used as key name.
@@ -151,7 +154,12 @@ export async function secretsDirectoryConfiguration(directory?: string): Promise
 }
 export function develVirtualFilesConfiguration(configDir: string, develSite: string): ConfigurationContract {
 	if (!configDir) { throw new ArgumentError("configDir"); }
-	if (!fs.existsSync(configDir)) { throw new Error("Bad configuration directory (not exists): " + configDir); }
+	if (!fs.existsSync(configDir)) {
+		throw new ConfigurationError(
+			"Bad configuration directory (not exists): " + configDir,
+			null, null
+		);
+	}
 	const projectConfigDir = path.join(configDir, "project.properties");
 
 	const files: Array<string> = [];
@@ -167,7 +175,10 @@ export function develVirtualFilesConfiguration(configDir: string, develSite: str
 	files.forEach((file) => {
 		if (!fs.existsSync(file)) {
 			console.warn("Skip a configuration file (not exists): " + file);
-			throw new Error("Skip a configuration file(not exists): " + file);
+			throw new ConfigurationError(
+				"Skip a configuration file(not exists): " + file,
+				null, null
+			);
 		}
 		propertiesFileContentProcessor(file, (name: string, value: string) => {
 			if (name in process.env) {
@@ -215,7 +226,10 @@ export class Configuration implements ConfigurationContract {
 		});
 		if (Object.keys(subDict).length === 0) {
 			const fullKeyName = this.getFullKey(configurationNamespace);
-			throw new Error(`Namespace '${fullKeyName}' was not found in the configuration.`);
+			throw new ConfigurationError(
+				`Namespace '${fullKeyName}' was not found in the configuration.`,
+				fullKeyName, null
+			);
 		}
 		const parentNamespace = this._parentNamespace !== undefined ?
 			`${this._parentNamespace}.${configurationNamespace}` : configurationNamespace;
@@ -241,7 +255,10 @@ export class Configuration implements ConfigurationContract {
 				const partOfValue = value.slice(0, 4);
 				const maskValue = `${partOfValue}...`;
 				const fullKeyName = this.getFullKey(key);
-				throw new Error(`Bad type of key '${fullKeyName}'. Cannot parse value '${maskValue}' as base64.`);
+				throw new ConfigurationError(
+					`Bad type of key '${fullKeyName}'. Cannot parse value '${maskValue}' as base64.`,
+					fullKeyName, null
+				);
 			}
 			return parsedData;
 		}
@@ -256,7 +273,10 @@ export class Configuration implements ConfigurationContract {
 			if (value === "true") { return true; }
 			if (value === "false") { return false; }
 			const fullKeyName = this.getFullKey(key);
-			throw new Error(`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to boolean type.`);
+			throw new ConfigurationError(
+				`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to boolean type.`,
+				fullKeyName, null
+			);
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
 		throwWrongKeyError(key, this._parentNamespace);
@@ -269,7 +289,10 @@ export class Configuration implements ConfigurationContract {
 			const friendlyValue = parseInt(value);
 			if (friendlyValue.toString() === value) { return friendlyValue; }
 			const fullKeyName = this.getFullKey(key);
-			throw new Error(`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to integer type.`);
+			throw new ConfigurationError(
+				`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to integer type.`,
+				fullKeyName, null
+			);
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
 		throwWrongKeyError(key, this._parentNamespace);
@@ -282,7 +305,10 @@ export class Configuration implements ConfigurationContract {
 			const friendlyValue = parseFloat(value);
 			if (friendlyValue.toString() === value) { return friendlyValue; }
 			const fullKeyName = this.getFullKey(key);
-			throw new Error(`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to float type.`);
+			throw new ConfigurationError(
+				`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to float type.`,
+				fullKeyName, null
+			);
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
 		throwWrongKeyError(key, this._parentNamespace);
@@ -295,7 +321,10 @@ export class Configuration implements ConfigurationContract {
 			if (value === "enabled") { return true; }
 			if (value === "disabled") { return false; }
 			const fullKeyName = this.getFullKey(key);
-			throw new Error(`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to enabled boolean value.`);
+			throw new ConfigurationError(
+				`Bad type of key '${fullKeyName}'. Cannot convert the value '${value}' to enabled boolean value.`,
+				fullKeyName, null
+			);
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
 		throwWrongKeyError(key, this._parentNamespace);
@@ -318,7 +347,7 @@ export class Configuration implements ConfigurationContract {
 				const partOfValue = value.slice(0, 4);
 				const maskValue = `${partOfValue}...`;
 				const fullKeyName = this.getFullKey(key);
-				throw new Error(`Bad type of key '${fullKeyName}'. Cannot parse value '${maskValue}' as URL.`);
+				throw new ConfigurationError(`Bad type of key '${fullKeyName}'. Cannot parse value '${maskValue}' as URL.`, fullKeyName, e);
 			}
 		}
 		if (defaultValue !== undefined) { return defaultValue; }
@@ -382,7 +411,14 @@ function propertiesFileContentProcessor(file: string, cb: (name: string, value: 
 
 function throwWrongKeyError(key: string, parentNamespace?: string): never {
 	if (parentNamespace !== undefined) {
-		throw new Error(`A value for key '${parentNamespace}.${key}' was not found in current configuration.`);
+		const fullKey: string = `${parentNamespace}.${key}`;
+		throw new ConfigurationError(
+			`A value for key '${fullKey}' was not found in current configuration.`,
+			fullKey, null
+		);
 	}
-	throw new Error(`A value for key '${key}' was not found in current configuration.`);
+	throw new ConfigurationError(
+		`A value for key '${key}' was not found in current configuration.`,
+		key, null
+	);
 }
