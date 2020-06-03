@@ -1,6 +1,7 @@
-import { Configuration as ConfigurationContract } from "@zxteam/contract";
+import { Configuration } from "@zxteam/contract";
 import { ArgumentError, ConfigurationError } from "@zxteam/errors";
 
+import * as TOML from "@iarna/toml";
 import * as _ from "lodash";
 import * as path from "path";
 import * as fs from "fs";
@@ -11,17 +12,17 @@ const readFile = promisify(fs.readFile);
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 
-export function chainConfiguration(...configurations: ReadonlyArray<ConfigurationContract>): ConfigurationContract {
+export function chainConfiguration(...configurations: ReadonlyArray<Configuration>): Configuration {
 	if (configurations.length === 0) {
 		throw new ArgumentError("configurations", "Expected at least one sub configuration");
 	}
 	const items = configurations.slice();
 	function binder(
-		method: keyof ConfigurationContract, callback: (configurationItem: ConfigurationContract, key: string) => any
+		method: keyof Configuration, callback: (configurationItem: Configuration, key: string) => any
 	): (key: string, defaultValue?: any) => any {
 		function bind(key: string, defaultValue?: any) {
 			for (let itemIndex = 0; itemIndex < items.length; ++itemIndex) {
-				const configurationItem: ConfigurationContract = items[itemIndex];
+				const configurationItem: Configuration = items[itemIndex];
 				if (configurationItem.has(key)) {
 					return callback(configurationItem, key);
 				}
@@ -33,13 +34,19 @@ export function chainConfiguration(...configurations: ReadonlyArray<Configuratio
 		}
 		return bind;
 	}
-	const chainConfigurationInstance: ConfigurationContract = {
+	const chainConfigurationInstance: Configuration = {
 		get configurationNamespace() { return items[0].configurationNamespace; },
+		get keys() {
+			return _.union(...items.map(item => item.keys));
+		},
 		get: binder("get", (cfg, key) => cfg.get(key)),
 		getBase64: binder("getBase64", (cfg, key) => cfg.getBase64(key)),
 		getBoolean: binder("getBoolean", (cfg, key) => cfg.getBoolean(key)),
-		getConfiguration(configurationNamespace: string): ConfigurationContract {
-			const subItems: Array<ConfigurationContract> = [];
+		getConfiguration(configurationNamespace: string): Configuration {
+			return this.getNamespace(configurationNamespace);
+		},
+		getNamespace(configurationNamespace: string): Configuration {
+			const subItems: Array<Configuration> = [];
 			items.forEach(function (item) {
 				if (item.hasNamespace(configurationNamespace)) {
 					subItems.push(item.getConfiguration(configurationNamespace));
@@ -56,6 +63,15 @@ export function chainConfiguration(...configurations: ReadonlyArray<Configuratio
 				);
 			}
 			return chainConfiguration(...subItems);
+		},
+		getIndexer(indexerName?: string) {
+			if (indexerName === undefined) { indexerName = "indexer"; }
+			for (let itemIndex = 0; itemIndex < items.length; ++itemIndex) {
+				if (items[itemIndex].has(indexerName)) {
+					return items[itemIndex].getIndexer(indexerName);
+				}
+			}
+			throwWrongKeyError(indexerName, this.configurationNamespace);
 		},
 		getEnabled: binder("getEnabled", (cfg, key) => cfg.getEnabled(key)),
 		getFloat: binder("getFloat", (cfg, key) => cfg.getFloat(key)),
@@ -91,28 +107,25 @@ export function chainConfiguration(...configurations: ReadonlyArray<Configuratio
 				}
 			}
 			return false;
-		},
-		keys() {
-			return _.union(...items.map(item => item.keys()));
 		}
 	};
 	return chainConfigurationInstance;
 }
-export function fileConfiguration(configFile: string): ConfigurationContract {
-	const dict: Configuration.Dictionary = {};
+export function fileConfiguration(configFile: string): Configuration {
+	const dict: ConfigurationImpl.Dictionary = {};
 	propertiesFileContentProcessor(configFile, (name: string, value: string) => {
 		dict[name] = value;
 	});
-	return new Configuration(dict);
+	return new ConfigurationImpl(dict);
 }
-export function envConfiguration(): ConfigurationContract {
-	const dict: Configuration.Dictionary = {};
+export function envConfiguration(): Configuration {
+	const dict: ConfigurationImpl.Dictionary = {};
 	_.entries(process.env).forEach(([name, value]) => {
 		if (value !== undefined) {
 			dict[name] = value;
 		}
 	});
-	const config = new Configuration(dict);
+	const config = new ConfigurationImpl(dict);
 
 	// const adapter: ConfigurationContract = {
 	// 	get configurationNamespace() { return config.configurationNamespace; },
@@ -121,23 +134,59 @@ export function envConfiguration(): ConfigurationContract {
 
 	return config;
 }
-export function cmdConfiguration(): ConfigurationContract {
+export function cmdConfiguration(): Configuration {
 	//TODO
 	throw new ConfigurationError("Not implemented yet", null, null);
+}
+export function tomlConfiguration(tomlDocument: string): Configuration {
+	const data: TOML.JsonMap = TOML.parse(tomlDocument);
+
+	const configDict: ConfigurationImpl.Dictionary = {};
+
+	function recursiveWalker(sourceData: any, ns: string = ""): void {
+		if (typeof sourceData === "string") {
+			configDict[ns] = sourceData;
+		} else if (typeof sourceData === "number") {
+			configDict[ns] = sourceData.toString();
+		} else if (typeof sourceData === "boolean") {
+			configDict[ns] = sourceData ? "true" : "false";
+		} else if (Array.isArray(sourceData)) {
+			const indexer: Array<string> = [];
+			for (let index = 0; index < sourceData.length; ++index) {
+				const subKey = `${ns}.${index}`;
+				recursiveWalker(sourceData[index], subKey);
+				indexer.push(index.toString());
+			}
+			configDict[`${ns}.indexer`] = indexer.join(" ");
+		} else {
+			for (const [key, value] of _.entries(sourceData)) {
+				const fullKey = ns !== "" ? `${ns}.${key}` : key;
+				recursiveWalker(value, fullKey);
+			}
+		}
+	}
+
+	recursiveWalker(data);
+
+	return new ConfigurationImpl(configDict);
+}
+export function tomlFileConfiguration(tomlConfigFile: string): Configuration {
+	const fileContent: Buffer = fs.readFileSync(tomlConfigFile);
+	return tomlConfiguration(fileContent.toString("utf-8"));
 }
 /**
  * Loading values from files. A filename is used as key name.
  * Main reason for this is https://docs.docker.com/engine/swarm/secrets/
  * @param directory a directory where secret files are placed
  */
-export async function secretsDirectoryConfiguration(directory?: string): Promise<ConfigurationContract> {
+export async function secretsDirectoryConfiguration(directory?: string): Promise<Configuration> {
 	if (directory === undefined) {
 		// Setup default dir
 		// https://docs.docker.com/engine/swarm/secrets/
 		directory = "/run/secrets";
 	}
 
-	const dict: Configuration.Dictionary = {};
+	const dict: ConfigurationImpl.Dictionary = {};
 	const sourceDirectory = directory;
 	const files: Array<string> = await readdir(sourceDirectory);
 	await files.reduce(async (p, c) => {
@@ -150,9 +199,9 @@ export async function secretsDirectoryConfiguration(directory?: string): Promise
 		}
 	}, Promise.resolve());
 
-	return new Configuration(dict);
+	return new ConfigurationImpl(dict);
 }
-export function develVirtualFilesConfiguration(configDir: string, develSite: string): ConfigurationContract {
+export function develVirtualFilesConfiguration(configDir: string, develSite: string): Configuration {
 	if (!configDir) { throw new ArgumentError("configDir"); }
 	if (!fs.existsSync(configDir)) {
 		throw new ConfigurationError(
@@ -171,7 +220,7 @@ export function develVirtualFilesConfiguration(configDir: string, develSite: str
 		files.push(path.join(userConfigDir, "config-" + currentUserName + ".properties"));
 	}
 
-	const dict: Configuration.Dictionary = {};
+	const dict: ConfigurationImpl.Dictionary = {};
 	files.forEach((file) => {
 		if (!fs.existsSync(file)) {
 			console.warn("Skip a configuration file (not exists): " + file);
@@ -188,18 +237,19 @@ export function develVirtualFilesConfiguration(configDir: string, develSite: str
 			}
 		});
 	});
-	return new Configuration(dict);
+	return new ConfigurationImpl(dict);
 }
 
-export namespace Configuration {
+export namespace ConfigurationImpl {
 	export type Dictionary = { [key: string]: string };
 }
 
-export class Configuration implements ConfigurationContract {
-	private readonly _dict: Configuration.Dictionary;
+export class ConfigurationImpl implements Configuration {
+	private readonly _dict: Readonly<ConfigurationImpl.Dictionary>;
 	private readonly _parentNamespace?: string;
+	private _keys?: ReadonlyArray<string>;
 
-	public constructor(dict: Configuration.Dictionary, parentNamespace?: string) {
+	public constructor(dict: Readonly<ConfigurationImpl.Dictionary>, parentNamespace?: string) {
 		this._dict = dict;
 		if (parentNamespace !== undefined) {
 			this._parentNamespace = parentNamespace;
@@ -213,9 +263,20 @@ export class Configuration implements ConfigurationContract {
 		return "";
 	}
 
-	public getConfiguration(configurationNamespace: string): ConfigurationContract {
+	public get keys(): ReadonlyArray<string> {
+		return this._keys !== undefined ? this._keys : (this._keys = Object.freeze(Object.keys(this._dict)));
+	}
+
+	/**
+	 * @deprecated Use `getNamespace` instead
+	 */
+	public getConfiguration(configurationNamespace: string): Configuration {
+		return this.getNamespace(configurationNamespace);
+	}
+
+	public getNamespace(configurationNamespace: string): Configuration {
 		if (!configurationNamespace) { throw new ArgumentError("configurationNamespace"); }
-		const subDict: Configuration.Dictionary = {};
+		const subDict: ConfigurationImpl.Dictionary = {};
 		const criteria = configurationNamespace + ".";
 		const criteriaLen = criteria.length;
 		Object.keys(this._dict).forEach((key) => {
@@ -233,7 +294,12 @@ export class Configuration implements ConfigurationContract {
 		}
 		const parentNamespace = this._parentNamespace !== undefined ?
 			`${this._parentNamespace}.${configurationNamespace}` : configurationNamespace;
-		return new Configuration(subDict, parentNamespace);
+		return new ConfigurationImpl(subDict, parentNamespace);
+	}
+
+	public getIndexer(indexerName: string = "indexer"): Array<Configuration> {
+		const indexer = this.getString(indexerName);
+		return indexer.split(" ").map(index => this.getNamespace(index));
 	}
 
 	public get(key: string): boolean | number | string {
@@ -380,10 +446,6 @@ export class Configuration implements ConfigurationContract {
 			return !_.isEmpty(value);
 		}
 		return false;
-	}
-
-	public keys(): ReadonlyArray<string> {
-		return Object.keys(this._dict);
 	}
 
 	private getFullKey(key: string): string {
