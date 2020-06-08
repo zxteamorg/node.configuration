@@ -153,11 +153,17 @@ export function tomlConfiguration(tomlDocument: string): Configuration {
 		} else if (Array.isArray(sourceData)) {
 			const indexer: Array<string> = [];
 			for (let index = 0; index < sourceData.length; ++index) {
-				const subKey = `${ns}.${index}`;
-				recursiveWalker(sourceData[index], subKey);
-				indexer.push(index.toString());
+				const innerSourceData = sourceData[index];
+				const indexName: string = typeof (innerSourceData) === "object" && "index" in innerSourceData
+					? innerSourceData.index : index.toString();
+				const subKey = `${ns}.${indexName}`;
+				recursiveWalker(innerSourceData, subKey);
+				indexer.push(indexName);
 			}
-			configDict[`${ns}.indexer`] = indexer.join(" ");
+			const indexerKey: string = `${ns}_indexer`;
+			if (!(indexerKey in configDict)) {
+				configDict[indexerKey] = indexer.join(" ");
+			}
 		} else {
 			for (const [key, value] of _.entries(sourceData)) {
 				const fullKey = ns !== "" ? `${ns}.${key}` : key;
