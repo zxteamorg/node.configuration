@@ -91,5 +91,36 @@ desc = "desc3"
 		assert.equal(config.getString("setup.model.model3.title"), "model3");
 		assert.equal(config.getString("setup.model.model3.desc"), "desc3");
 	});
+
+
+	it.skip("getIndexer with named index", function () {
+		const config = thislib.tomlConfiguration(`
+[setup]
+
+model_indexer = "model1 model3"
+
+[[setup.model]]
+index = "model1"
+title = "model1"
+desc = "desc1"
+[[setup.model]]
+index = "model2"
+title = "model2"
+desc = "desc2"
+[[setup.model]]
+index = "model3"
+title = "model3"
+desc = "desc3"
+`
+		);
+
+		const indexer = config.getNamespace("setup.model").getIndexer();
+		assert.equal(indexer.length, 2);
+		assert.equal(config.getString("setup.model_indexer"), "model1 model3");
+		assert.equal(indexer[0].getString("title"), "model1");
+		assert.equal(indexer[0].getString("desc"), "desc1");
+		assert.equal(indexer[1].getString("title"), "model3");
+		assert.equal(indexer[1].getString("desc"), "desc3");
+	});
 });
 

@@ -22,14 +22,14 @@
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
 		"@zxteam/contract": "^6.0.62",
-		"@zxteam/errors": "^6.0.61",
-		"lodash": "^4.17.15"
+		"@zxteam/errors": "^6.0.62",
+		"lodash": "^4.17.19"
 	},
 	"devDependencies": {
-		"@types/lodash": "^4.14.155",
-		"@types/node": "^11.15.14",
+		"@types/lodash": "^4.14.157",
+		"@types/node": "^11.15.18",
 		"@types/tmp": "^0.1.0",
-		"@zxnode/build": "^0.0.34",
+		"@zxnode/build": "^0.0.38",
 		"tmp": "^0.1.0"
 	},
 	"engines": {
